@@ -1,0 +1,42 @@
+name: CI Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Run Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run lint and format checks
+        run: make lint
+
+  ci-build:
+    name: Code Check & CI build
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code from repo
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      # Validate code
+      - name: Check code for linting and format errors
+        run: make lint
+
+      # Build image
+      - name: Build the container image
+        run: make image IMAGE_REPO=$GITHUB_ACTOR/$IMAGE_NAME
+
+      # Only when pushing to default branch (e.g. master or main), then push image to registry
+      - name: Push to container registry
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login $IMAGE_REG -u $GITHUB_ACTOR --password-stdin
+          make push IMAGE_REPO=$GITHUB_ACTOR/$IMAGE_NAME

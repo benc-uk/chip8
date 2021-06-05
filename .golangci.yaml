@@ -1,0 +1,11 @@
+linters-settings:
+  golint:
+    min-confidence: 0
+linters:
+  enable:
+    - revive
+    - gofmt
+    - godox
+issues:
+  include:
+    - EXC0002
