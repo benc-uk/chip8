@@ -5,7 +5,6 @@ linters:
   enable:
     - revive
     - gofmt
-    - godox
 issues:
   include:
     - EXC0002
