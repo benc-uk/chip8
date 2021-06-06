@@ -1,3 +1,9 @@
+//
+// CHIP-8 - Fonts
+// Ben C, June 2021
+// Notes:
+//
+
 package font
 
 var defaultFont = []byte{
