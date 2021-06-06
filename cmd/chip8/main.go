@@ -17,7 +17,7 @@ import (
 
 var version = "0.0.1"
 
-const debug = false
+const debug = true
 const cyclesPerSecond = 60
 
 const banner = `
