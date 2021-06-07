@@ -15,7 +15,7 @@ import (
 )
 
 // Where fonts are loaded
-const fontBase = 0x50
+const FontBase = 0x0050
 
 // ProgBase is where programs should be loaded into memory
 const ProgBase = 0x200
@@ -51,6 +51,7 @@ type VM struct {
 	timerSound byte
 	// TODO: Is using booleans dumb?
 	display [DisplayWidth][DisplayHeight]bool
+	stack   []uint16
 
 	// Supporting fields for emulation. not part of the system architecture
 	running bool
@@ -64,7 +65,7 @@ func NewVM(debug bool) *VM {
 
 	// Load font into lower memory
 	for i, fontByte := range font.GetFont() {
-		v.memory[fontBase+i] = fontByte
+		v.memory[FontBase+i] = fontByte
 	}
 
 	return &v
@@ -91,7 +92,7 @@ func (v *VM) Cycle() error {
 	// Execute parses the opcode and excutes instructions
 	v.execute(opcode)
 
-	// Debug system state
+	// Debug VM system state, PC, index, registers, stack etc
 	v.dump()
 
 	return nil
@@ -127,22 +128,31 @@ func (v *VM) execute(o Opcode) {
 	case 0x0:
 		{
 			if o.nn == 0xE0 {
-				v.CLS()
+				v.insCLS()
 			}
 			if o.nn == 0xEE {
-				v.CLS()
+				v.insRET()
 			}
 		}
 	case 0x1:
-		v.JP(o.nnn)
+		v.insJP(o.nnn)
+	case 0x2:
+		v.insCALL(o.nnn)
 	case 0x6:
-		v.LDVB(o.x, o.nn)
+		v.insLDvb(o.x, o.nn)
 	case 0x7:
-		v.ADDVB(o.x, o.nn)
+		v.insADDvb(o.x, o.nn)
 	case 0xA:
-		v.LDI(o.nnn)
+		v.insLDi(o.nnn)
 	case 0xD:
-		v.DRW(o.x, o.y, o.n)
+		v.insDRW(o.x, o.y, o.n)
+	case 0xF:
+		{
+			switch o.nn {
+			case 0x29:
+				v.insLDf(o.x)
+			}
+		}
 	}
 }
 

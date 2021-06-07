@@ -17,11 +17,11 @@ help: ## This help message :)
 
 lint: ## Lint & format, will not fix but sets exit code on error
 	@$(GOLINT_PATH) > /dev/null || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
-	$(GOLINT_PATH) run --modules-download-mode=mod *.go --out-format=github-actions $(SRC_DIR)/...
+	$(GOLINT_PATH) run --modules-download-mode=mod --out-format=github-actions $(SRC_DIR)/...
 
 lint-fix: ## Lint & format, will try to fix errors and modify code
 	@$(GOLINT_PATH) > /dev/null || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
-	golangci-lint run --modules-download-mode=mod *.go --fix $(SRC_DIR)/...
+	golangci-lint run --modules-download-mode=mod --fix $(SRC_DIR)/...
 
 build: ## Run a local build without a container
 	@mkdir -p bin

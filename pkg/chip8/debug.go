@@ -24,12 +24,22 @@ func (v VM) dump() {
 		return
 	}
 	console.Successf("> SYS >>> pc:%04X i:%04X\n", v.pc, v.index)
+
+	// Dump registers
 	console.Successf("> SYS >>> ")
 	for i := range v.registers {
 		console.Successf("v%d:%02X ", i, v.registers[i])
 	}
 	console.Successf("\n")
-	//console.Successf("> SYS >>> v0: %02X v1:%02X v0: %02X v1:%02X v0: %02X v1:%02X v0: %02X v1:%02X \n", v.registers[0], v.registers[1])
+
+	// Dump stack
+	if len(v.stack) > 0 {
+		console.Successf("> SYS >>> ")
+		for i := range v.stack {
+			console.Successf("stack[%d]:%02X ", i, v.stack[i])
+		}
+		console.Successf("\n")
+	}
 }
 
 func (v *VM) DumpMemory(start int, end int) {
