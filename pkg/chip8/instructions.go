@@ -7,14 +7,12 @@
 
 package chip8
 
-import "github.com/benc-uk/chip8/pkg/console"
-
 //
 // Zero params
 //
 
 // CLS - clear screen - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00E0
-func (v *VM) CLS() {
+func (v *VM) insCLS() {
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			v.display[x][y] = false
@@ -22,8 +20,17 @@ func (v *VM) CLS() {
 	}
 }
 
-func (v *VM) RET() {
-	console.Error("***** RET NOT IMPLEMENTED!")
+// RET - Return - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00EE
+func (v *VM) insRET() {
+	if len(v.stack) == 0 {
+		return
+	}
+
+	// pop from stack and set pc
+	i := len(v.stack) - 1
+	stackAddr := v.stack[i]
+	v.stack = v.stack[:i]
+	v.pc = stackAddr
 }
 
 //
@@ -31,12 +38,18 @@ func (v *VM) RET() {
 //
 
 // LDI - load nnn into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Annn
-func (v *VM) LDI(addr uint16) {
+func (v *VM) insLDi(addr uint16) {
 	v.index = addr
 }
 
 // JP - jump to addr nnn - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#1nnn
-func (v *VM) JP(addr uint16) {
+func (v *VM) insJP(addr uint16) {
+	v.pc = addr
+}
+
+// CALL - put PC on stack & jump to addr nnn - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2nnn
+func (v *VM) insCALL(addr uint16) {
+	v.stack = append(v.stack, v.pc)
 	v.pc = addr
 }
 
@@ -44,9 +57,11 @@ func (v *VM) JP(addr uint16) {
 // One param: nibble in x
 //
 
-// LF - load font
-func (v *VM) LF(reg uint8) {
-	console.Error("***** LF NOT IMPLEMENTED!")
+// LF - load addr of font sprite for value in Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
+func (v *VM) insLDf(reg uint8) {
+	// NOTE: Each font sprite is 5 bytes "high"
+	val := uint16(v.registers[reg]) * 5
+	v.index = FontBase + val
 }
 
 //
@@ -54,12 +69,12 @@ func (v *VM) LF(reg uint8) {
 //
 
 // LDVB - load byte nn into register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#6xkk
-func (v *VM) LDVB(reg uint8, byteData uint8) {
+func (v *VM) insLDvb(reg uint8, byteData uint8) {
 	v.registers[reg] = byteData
 }
 
 // ADDVB - add byte nn to value in register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#7xkk
-func (v *VM) ADDVB(reg uint8, byteData uint8) {
+func (v *VM) insADDvb(reg uint8, byteData uint8) {
 	v.registers[reg] = v.registers[reg] + byteData
 }
 
@@ -67,7 +82,7 @@ func (v *VM) ADDVB(reg uint8, byteData uint8) {
 // Three params: x & y (nibbles) indicating V registers, and n nibble
 //
 
-func (v *VM) DRW(reg1 uint8, reg2 uint8, height uint8) {
+func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 	x := v.registers[reg1] % DisplayWidth
 	y := v.registers[reg2] % DisplayHeight
 	v.registers[0xF] = 0
