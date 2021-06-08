@@ -13,7 +13,7 @@ https://en.wikipedia.org/wiki/CHIP-8
 Goals:
 
 - Write my first emulator
-- Learn about virtual machine development (no I mean real [virtual machines](https://wiki.c2.com/?VirtualMachine#:~:text=A%20virtual%20machine%20is%20a,instructions%20for%20a%20specialized%20VirtualMachine.))
+- Learn about virtual machine development (no, I mean _real_ [virtual machines](https://wiki.c2.com/?VirtualMachine), not that ugly IaaS stuff)
 - Have fun
 
 Use cases & key features:
