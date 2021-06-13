@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    * {
+      background-color: #000000;
+      color: #22ee22;
+      font-family: "Cascadia Code", "Consolas", "Courier", monospace;
+      font-size: 1.1rem;
+    }
+    html {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<script src="wasm_exec.js"></script>
+<script>
+  // Old CHIP8 not Super
+  const CHIP8_DISPLAY_WIDTH = 64;
+  // Calc pixelsize to request based on our iframe size
+  const pixelSize = Math.floor(window.frameElement.width / CHIP8_DISPLAY_WIDTH);
+  // Get our params from the data attributes
+  const pgmName = window.frameElement.getAttribute("data-pgm-name");
+  const delay = window.frameElement.getAttribute("data-delay");
+
+  // Wrapper so we can use await
+  async function runEmulator() {
+    // Load CHIP-8 WASM
+    const go = new Go();
+
+    // Kinda janky but through main is our only way of working with ebiten wasm
+    go.argv = [pgmName, false, delay, pixelSize];
+    const wasm = await WebAssembly.instantiateStreaming(
+      fetch("chip8.wasm"),
+      go.importObject
+    );
+
+    setTimeout(() => {
+      go.run(wasm.instance);
+      document.querySelector("#banner").remove();
+    }, 1000);
+  }
+
+  // Start here...
+  runEmulator();
+</script>
+<pre id="banner">
+
+   ██████╗  ██████╗      ██████╗██╗  ██╗██╗██████╗        █████╗ 
+  ██╔════╝ ██╔═══██╗    ██╔════╝██║  ██║██║██╔══██╗      ██╔══██╗
+  ██║  ███╗██║   ██║    ██║     ███████║██║██████╔╝█████╗╚█████╔╝
+  ██║   ██║██║   ██║    ██║     ██╔══██║██║██╔═══╝ ╚════╝██╔══██╗
+  ╚██████╔╝╚██████╔╝    ╚██████╗██║  ██║██║██║           ╚█████╔╝
+   ╚═════╝  ╚═════╝      ╚═════╝╚═╝  ╚═╝╚═╝╚═╝            ╚════╝
+      
+++■ Version 0.0.1
+++■ Enabling WASM data & protocol sync buffers
+++■ System cold boot completed with 0 warnings
+++■ Loading program into memory
+  > █
+</pre>

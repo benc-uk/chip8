@@ -1,0 +1,48 @@
+* {
+  font-family: "Cascadia Code", "Consolas", "Courier", monospace;
+  color: #22ee22;
+}
+
+body {
+  background-color: #283627;
+}
+
+footer {
+  float: right;
+  text-align: right;
+  color: #2f8b2f;
+  font-size: 0.8rem;
+}
+
+footer a {
+  color: #2f8b2f;
+}
+
+iframe {
+  border: 12px solid #000000;
+  background-color: #000000;
+  margin: 1rem;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+button {
+  border-radius: 0;
+  border: 3px solid #22ee22;
+  background-color: #002700;
+  padding: 0.5rem;
+  font-size: 1rem;
+  color: #22ee22;
+}
+
+button:hover {
+  background-color: #005000;
+}
+
+select {
+  background-color: #000000;
+  font-size: 1rem;
+  border: 3px solid #22ee22;
+  background-color: #002700;
+  padding: 0.5rem;
+}

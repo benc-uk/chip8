@@ -36,7 +36,7 @@ func (v VM) dump() {
 	if len(v.stack) > 0 {
 		console.Successf("> SYS >>> ")
 		for i := range v.stack {
-			console.Successf("stack[%d]:%02X ", i, v.stack[i])
+			console.Successf("stack[%d]:%04X ", i, v.stack[i])
 		}
 		console.Successf("\n")
 	}

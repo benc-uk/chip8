@@ -9,6 +9,7 @@ package chip8
 import (
 	"encoding/binary"
 	"errors"
+	"time"
 
 	"github.com/benc-uk/chip8/pkg/console"
 	"github.com/benc-uk/chip8/pkg/font"
@@ -71,7 +72,21 @@ func NewVM(debug bool) *VM {
 	return &v
 }
 
-// Cycle is the main emulator function, running a processor cycle
+// Run the VM processor with a channel for reporting errors
+func (v *VM) Run(errors chan error, delay int) {
+	for {
+		err := v.Cycle()
+		if err != nil {
+			errors <- err
+
+			// Halt the processor
+			return
+		}
+		time.Sleep(time.Duration(delay) * time.Microsecond)
+	}
+}
+
+// Cycle is the heart of the CHIP-8 emulator, running a single processor cycle
 func (v *VM) Cycle() error {
 	if !v.running {
 		return nil
@@ -138,6 +153,10 @@ func (v *VM) execute(o Opcode) {
 		v.insJP(o.nnn)
 	case 0x2:
 		v.insCALL(o.nnn)
+	case 0x3:
+		v.insSEvb(o.x, o.nn)
+	case 0x4:
+		v.insSNEvb(o.x, o.nn)
 	case 0x6:
 		v.insLDvb(o.x, o.nn)
 	case 0x7:

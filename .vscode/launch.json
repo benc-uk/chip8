@@ -14,7 +14,7 @@
       "env": {
         "DISPLAY": "192.168.0.34:0"
       },
-      "args": ["-debug=true", "-speed=73", "roms/asm/a.ch8"]
+      "args": ["-debug=true", "-slow=80000", "roms/chip8-test-rom.ch8"]
     }
   ]
 }

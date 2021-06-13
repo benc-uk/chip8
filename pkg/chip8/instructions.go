@@ -7,6 +7,8 @@
 
 package chip8
 
+import "github.com/benc-uk/chip8/pkg/console"
+
 //
 // Zero params
 //
@@ -37,17 +39,17 @@ func (v *VM) insRET() {
 // One param: 12-bits in nnn
 //
 
-// LDI - load nnn into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Annn
+// LD I, addr - load nnn into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Annn
 func (v *VM) insLDi(addr uint16) {
 	v.index = addr
 }
 
-// JP - jump to addr nnn - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#1nnn
+// JP addr - jump to addr nnn - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#1nnn
 func (v *VM) insJP(addr uint16) {
 	v.pc = addr
 }
 
-// CALL - put PC on stack & jump to addr nnn - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2nnn
+// CALL addr - put PC on stack & jump to addr nnn - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#2nnn
 func (v *VM) insCALL(addr uint16) {
 	v.stack = append(v.stack, v.pc)
 	v.pc = addr
@@ -57,7 +59,7 @@ func (v *VM) insCALL(addr uint16) {
 // One param: nibble in x
 //
 
-// LF - load addr of font sprite for value in Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
+// LD F, Vx - load addr of font sprite for value in Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
 func (v *VM) insLDf(reg uint8) {
 	// NOTE: Each font sprite is 5 bytes "high"
 	val := uint16(v.registers[reg]) * 5
@@ -68,20 +70,50 @@ func (v *VM) insLDf(reg uint8) {
 // Two params: x (nibble) indicating a V register, and nn byte
 //
 
-// LDVB - load byte nn into register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#6xkk
+// LD Vx, byte - load byte nn into register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#6xkk
 func (v *VM) insLDvb(reg uint8, byteData uint8) {
 	v.registers[reg] = byteData
 }
 
-// ADDVB - add byte nn to value in register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#7xkk
+// ADD Vx, byte - add byte nn to value in register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#7xkk
 func (v *VM) insADDvb(reg uint8, byteData uint8) {
 	v.registers[reg] = v.registers[reg] + byteData
+}
+
+// SE Vx, byte - if byte nn == value in register Vx, advance pc - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk
+func (v *VM) insSEvb(reg uint8, byteData uint8) {
+	if v.registers[reg] == byteData {
+		v.pc += 2
+	}
+}
+
+// SNE Vx, byte - if byte nn != value in register Vx, advance pc - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk
+func (v *VM) insSNEvb(reg uint8, byteData uint8) {
+	if v.registers[reg] != byteData {
+		v.pc += 2
+	}
+}
+
+//
+// Two params: x and y (nibbles) both indicate V regsiters, n not used
+//
+func (v *VM) insLDxy(regx uint8, regy uint8) {
+	console.Error("NOT IMPLEMENTED")
+}
+
+func (v *VM) insORxy(regx uint8, regy uint8) {
+	console.Error("NOT IMPLEMENTED")
+}
+
+func (v *VM) insANDxy(regx uint8, regy uint8) {
+	console.Error("NOT IMPLEMENTED")
 }
 
 //
 // Three params: x & y (nibbles) indicating V registers, and n nibble
 //
 
+// DRW Vx, Vy, nibble - Draw sprite located at i for n bytes at x, y - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Dxyn
 func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 	x := v.registers[reg1] % DisplayWidth
 	y := v.registers[reg2] % DisplayHeight

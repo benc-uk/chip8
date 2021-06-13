@@ -14,7 +14,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const PixelSize = 12
+func (v *VM) LoadProgram(pgm []byte) {
+	// Reset the machine before writing program data to memory
+	v.reset()
+	for i := range pgm {
+		v.memory[ProgBase+i] = pgm[i]
+	}
+
+	console.Successf("Loaded %d bytes into memory OK\n", len(pgm))
+}
 
 func (v *VM) LoadProgramFile(fileName string) (int, error) {
 	console.Infof("Loading program from disk %s\n", fileName)
@@ -24,32 +32,27 @@ func (v *VM) LoadProgramFile(fileName string) (int, error) {
 		return 0, err
 	}
 
-	// Reset the machine before writing program data to memory
-	v.reset()
-	for i := range pgmBytes {
-		v.memory[ProgBase+i] = pgmBytes[i]
-	}
+	v.LoadProgram(pgmBytes)
 
-	console.Successf("Loaded %d bytes into memory OK\n", len(pgmBytes))
 	return len(pgmBytes), nil
 }
 
-func (v *VM) RenderDisplay(screen *ebiten.Image) {
+func (v *VM) RenderDisplay(screen *ebiten.Image, pixelSize int) {
 	screen.Clear()
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			if v.display[x][y] {
-				drawPixel(x, y, screen)
+				drawPixel(x, y, screen, pixelSize)
 			}
 		}
 	}
 }
 
-func drawPixel(x int, y int, screen *ebiten.Image) {
+func drawPixel(x int, y int, screen *ebiten.Image, pixelSize int) {
 	c := color.RGBA{0, 0xff, 0, 0xff}
-	for yi := 0; yi < PixelSize; yi++ {
-		for xi := 0; xi < PixelSize; xi++ {
-			screen.Set((x*PixelSize)+xi, (y*PixelSize)+yi, c)
+	for yi := 0; yi < pixelSize; yi++ {
+		for xi := 0; xi < pixelSize; xi++ {
+			screen.Set((x*pixelSize)+xi, (y*pixelSize)+yi, c)
 		}
 	}
 }

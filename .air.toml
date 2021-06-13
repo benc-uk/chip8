@@ -5,6 +5,7 @@ tmp_dir = "tmp"
 include_ext = [ "go" ]
 include_dir = [ "cmd", "ext" ]
 cmd = "go build -o ./tmp/main ./cmd/chip8/..."
+full_bin = "./tmp/main -debug -slow 80000 roms/simple.ch8"
 
 [misc]
 clean_on_exit = true
