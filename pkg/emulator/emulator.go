@@ -7,6 +7,7 @@ import (
 
 	"github.com/benc-uk/chip8/pkg/chip8"
 	"github.com/benc-uk/chip8/pkg/console"
+	"github.com/benc-uk/chip8/pkg/external"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -42,6 +43,7 @@ func Start(program []byte, debug bool, delay int, pixelSize int) {
 	ebiten.SetWindowTitle("Go CHIP-8 v" + Version)
 	ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	ebiten.SetVsyncEnabled(false)
+
 	// Run VM processor loop in a separate go-routine, with a channel used to raise errors
 	go vm.Run(emu.errorChan, delay)
 
@@ -67,7 +69,7 @@ func (e *chip8Emulator) Update() error {
 
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
 func (e *chip8Emulator) Draw(screen *ebiten.Image) {
-	e.vm.RenderDisplay(screen, e.pixelSize)
+	external.RenderDisplay(e.vm, screen, e.pixelSize)
 }
 
 // Layout can control scaling

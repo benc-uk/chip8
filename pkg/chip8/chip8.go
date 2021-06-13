@@ -195,3 +195,18 @@ func (v *VM) clearRegisters() {
 		v.registers[i] = 0
 	}
 }
+
+func (v *VM) LoadProgram(pgm []byte) {
+	// Reset the machine before writing program data to memory
+	v.reset()
+
+	for i := range pgm {
+		v.memory[ProgBase+i] = pgm[i]
+	}
+
+	console.Successf("Loaded %d bytes into memory OK\n", len(pgm))
+}
+
+func (v *VM) DisplayValueAt(x int, y int) bool {
+	return v.display[x][y]
+}
