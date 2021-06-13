@@ -1,3 +1,9 @@
+//
+// CHIP-8 emulator - wasm executable
+// Ben C, June 2021
+// Notes: JS side must set argv to pass in arguments
+//
+
 package main
 
 import (
@@ -14,19 +20,18 @@ import (
 func main() {
 	log.Println("WASM emulator starting")
 
-	log.Println(os.Args)
 	if len(os.Args) != 4 {
 		checkError(errors.New("wrong number of arguments"))
 	}
 
+	log.Printf("Fetching program file '%s' via HTTP\n", os.Args[0])
 	resp, err := http.Get(os.Args[0])
 	checkError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	checkError(err)
+	log.Println("Program file downloaded OK")
 
-	// pgmBase64 := os.Args[0]
-	// pgmBytes, _ := base64.StdEncoding.DecodeString(pgmBase64)
 	debug, err := strconv.ParseBool(os.Args[1])
 	checkError(err)
 	delay, err := strconv.Atoi(os.Args[2])

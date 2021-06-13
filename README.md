@@ -1,4 +1,4 @@
-# CHIP-8
+# Go CHIP-8
 
 This is (yet another) CHIP-8 emulator written in Go. Yes there are many others but this one is mine.
 
@@ -18,7 +18,9 @@ Goals:
 
 Use cases & key features:
 
-- Coming soon
+- WASM support, playable in browser as well as Linux and Windows binaries
+- Other stuff?
+- Joypad support?
 
 Supporting technologies and libraries:
 
@@ -28,47 +30,53 @@ Supporting technologies and libraries:
 
 ### 🔥☢🔥 Highly experimental under extreme WIP!
 
-![](https://img.shields.io/github/license/benc-uk/chip-8)
-![](https://img.shields.io/github/last-commit/benc-uk/chip-8)
-![](https://img.shields.io/github/release/benc-uk/chip-8)
-![](https://img.shields.io/github/checks-status/benc-uk/chip-8/main)
-![](https://img.shields.io/github/workflow/status/benc-uk/chip-8/CI%20Build?label=ci-build)
-![](https://img.shields.io/github/workflow/status/benc-uk/chip-8/Release%20Binaries?label=release)
+![](https://img.shields.io/github/license/benc-uk/chip8)
+![](https://img.shields.io/github/last-commit/benc-uk/chip8)
+![](https://img.shields.io/github/release/benc-uk/chip8)
+![](https://img.shields.io/github/checks-status/benc-uk/chip8/main)
+![](https://img.shields.io/github/workflow/status/benc-uk/chip8/CI%20Build?label=ci-build)
+![](https://img.shields.io/github/workflow/status/benc-uk/chip8/Release%20Binaries?label=release)
 
 
 # Getting Started
 
-## Installing / Deploying
+## Try web version
 
-- If the project can be installed (such as a command line tool or library)
-- Or deployed to Kubernetes, public cloud etc
+EXPERIMENTAL: https://code.benco.io/chip8/web/
+
+## Installing
+
+Download from [releases](https://github.com/benc-uk/chip8/releases), unzip/untar and run :)
 
 ## Running locally
 
-Notes on running the project locally, including pre-reqs
+Run `make build` and then `./bin/chip8`
 
-# Screenshots
-
-Optional. Screenshots can help convey what the project looks like when running and what it's purpose and use is.
-
+```text
+$ make
+build                🔨 Run a local build without a container
+help                 💬 This help message :)
+lint-fix             📝 Lint & format, will try to fix errors and modify code
+lint                 🔍 Lint & format, will not fix but sets exit code on error
+run                  🏃‍ Run application, used for local development
+test                 🤡 Run those sweet unit tests to give the illusion of testing
+```
 
 # Repository Structure
 
-A brief description of the top-level directories of this project is as follows:
+A brief description of the top-level directories of this project are:
 
-```c
-/api        - Details of the API specification & docs
-/build      - Build configuration e.g. Dockerfiles
-/charts     - Helm charts
-/deploy     - Deployment and infrastructure as code, inc Kubernetes
-/scripts    - Bash and other supporting scripts
-/src        - Source code
-/test       - Testing, mock data and API + load tests
+```text
+/cmd        - Main apps, both standalone and WASM versions
+/docs       - Docs, not much here
+/pkg        - Go packages and modules, most of the code is here
+/roms       - A handful of CHIP8 ROMs and programs for testing
+/web        - Web / WASM version
 ```
 
 # Known Issues
 
-Too many
+The project is NOT FINISHED
 
 # Change Log
 
