@@ -157,10 +157,35 @@ func (v *VM) execute(o Opcode) {
 		v.insSEvb(o.x, o.nn)
 	case 0x4:
 		v.insSNEvb(o.x, o.nn)
+	case 0x5:
+		v.insSEvb(o.x, o.y)
 	case 0x6:
 		v.insLDvb(o.x, o.nn)
 	case 0x7:
 		v.insADDvb(o.x, o.nn)
+	case 0x8:
+		{
+			switch o.n {
+			case 0:
+				v.insLDxy(o.x, o.y)
+			case 1:
+				v.insORxy(o.x, o.y)
+			case 2:
+				v.insANDxy(o.x, o.y)
+			case 3:
+				v.insXORxy(o.x, o.y)
+			case 4:
+				v.insADDxy(o.x, o.y)
+			case 5:
+				v.insSUBxy(o.x, o.y)
+			case 6:
+				v.insSHRxy(o.x, o.y)
+			case 7:
+				v.insSUBNxy(o.x, o.y)
+			case 0xE:
+				v.insSHLxy(o.x, o.y)
+			}
+		}
 	case 0xA:
 		v.insLDi(o.nnn)
 	case 0xD:
@@ -209,4 +234,12 @@ func (v *VM) LoadProgram(pgm []byte) {
 
 func (v *VM) DisplayValueAt(x int, y int) bool {
 	return v.display[x][y]
+}
+
+func (v *VM) GetFlag() uint8 {
+	return v.registers[0xF]
+}
+
+func (v *VM) SetFlag(val uint8) {
+	v.registers[0xF] = val
 }

@@ -97,15 +97,65 @@ func (v *VM) insSNEvb(reg uint8, byteData uint8) {
 //
 // Two params: x and y (nibbles) both indicate V regsiters, n not used
 //
+
+// SE Vx, Vy - skip and inc PC if Vx == Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#5xy0
+func (v *VM) insSExy(regx uint8, regy uint8) {
+	if v.registers[regx] == v.registers[regy] {
+		v.pc += 2
+	}
+}
+
+// LD Vx, Vy - place value of Vy into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy0
 func (v *VM) insLDxy(regx uint8, regy uint8) {
-	console.Error("NOT IMPLEMENTED")
+	v.registers[regx] = v.registers[regy]
 }
 
+// OR Vx, Vy - bitwise OR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy1
 func (v *VM) insORxy(regx uint8, regy uint8) {
+	v.registers[regx] |= v.registers[regy]
+}
+
+// AND Vx, Vy - bitwise OR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy2
+func (v *VM) insANDxy(regx uint8, regy uint8) {
+	v.registers[regx] &= v.registers[regy]
+}
+
+// XOR Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy3
+func (v *VM) insXORxy(regx uint8, regy uint8) {
+	v.registers[regx] ^= v.registers[regy]
+}
+
+// ADD Vx, Vy - Add Vx and Vy, store result into Vx. SETS VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy4
+func (v *VM) insADDxy(regx uint8, regy uint8) {
+	regxPrev := v.registers[regx]
+	v.registers[regx] = v.registers[regx] + v.registers[regy]
+	if v.registers[regx] < regxPrev {
+		v.registers[0xF] = 1
+	} else {
+		v.registers[0xF] = 0
+	}
+}
+
+// SUB Vx, Vy - Sub Vy from Vx, store result into Vx. SETS VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
+func (v *VM) insSUBxy(regx uint8, regy uint8) {
+	v.registers[regx] -= v.registers[regy]
+}
+
+// SHR Vx - bit 0 of Vx into VF, shift Vx to divide by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy6
+func (v *VM) insSHRxy(regx uint8, regy uint8) {
+	v.registers[0xF] = v.registers[regx] & 1
+	v.registers[regx] >>= 1
+	// v.registers[0xF] = v.registers[regy] & 0x1
+	// v.registers[regx] = v.registers[regy] >> 1
+}
+
+// SUBN Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
+func (v *VM) insSUBNxy(regx uint8, regy uint8) {
 	console.Error("NOT IMPLEMENTED")
 }
 
-func (v *VM) insANDxy(regx uint8, regy uint8) {
+// SHL Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE
+func (v *VM) insSHLxy(regx uint8, regy uint8) {
 	console.Error("NOT IMPLEMENTED")
 }
 
@@ -124,20 +174,19 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 	var row byte
 	for row = 0; row < height; row++ {
 		spriteByte := v.memory[v.index+uint16(row)]
-		var xline byte
-		for xline = 0; xline < 8; xline++ {
-
-			// Get bit from sprite - why this needs to be reversed I don't know!
-			spriteBit := (spriteByte>>(7-xline))&1 == 1
+		var xbit byte
+		for xbit = 0; xbit < 8; xbit++ {
+			// Get bit from sprite - we need to draw left to right, so we start at MSB
+			spriteBit := (spriteByte>>(7-xbit))&1 == 1
 			// Get bit from display
-			displayBit := v.display[x+xline][y+row]
+			displayBit := v.display[x+xbit][y+row]
 			// XOR logic and setting of VF
 			if displayBit && spriteBit {
-				v.display[x+xline][y+row] = false
+				v.display[x+xbit][y+row] = false
 				v.registers[0xF] = 1
 			}
 			if !displayBit && spriteBit {
-				v.display[x+xline][y+row] = true
+				v.display[x+xbit][y+row] = true
 			}
 		}
 	}
