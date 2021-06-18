@@ -8,6 +8,7 @@ package chip8
 
 const errorCodeOther = 50
 const errorCodeAddress = 51
+const errorBadOpcode = 52
 
 type SystemError struct {
 	code   int

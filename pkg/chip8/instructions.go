@@ -7,6 +7,12 @@
 
 package chip8
 
+import (
+	"math/rand"
+
+	"github.com/benc-uk/chip8/pkg/console"
+)
+
 //
 // Zero params
 //
@@ -15,7 +21,7 @@ package chip8
 func (v *VM) insCLS() {
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
-			v.display[x][y] = false
+			v.display[x][y] = 0
 		}
 	}
 }
@@ -69,6 +75,86 @@ func (v *VM) insADDIx(reg uint8) {
 	v.index += uint16(v.registers[reg])
 }
 
+// SKP Vx - Skip if key with val Vx is held - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Ex9E
+func (v *VM) insSKPx(reg uint8) {
+	for _, k := range v.Keys {
+		if k == v.registers[reg] {
+			v.pc += 2
+			return
+		}
+	}
+}
+
+// SKNP Vx - Skip if key with val Vx is not held - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#ExA1
+func (v *VM) insSKNPx(reg uint8) {
+	keyUp := true
+	for _, k := range v.Keys {
+		if k == v.registers[reg] {
+			keyUp = false
+			break
+		}
+	}
+	if keyUp {
+		v.pc += 2
+	}
+}
+
+// LD Vx, DT - store the delay timer val into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx07
+func (v *VM) insLDxDT(reg uint8) {
+	v.registers[reg] = v.delayTimer
+}
+
+// LD DT, Vx - store Vx into the delay timer - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx15
+func (v *VM) insLDDTx(reg uint8) {
+	v.delayTimer = v.registers[reg]
+}
+
+// LD ST, Vx - store Vx into the sound timer - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx18
+func (v *VM) insLDSTx(reg uint8) {
+	v.soundTimer = v.registers[reg]
+}
+
+// LD B, Vx - store BCD version of Vx into mem i (3 bytes) - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx33
+func (v *VM) insLDBx(reg uint8) {
+	v.memory[v.index] = v.registers[reg] / 100
+	v.memory[v.index+1] = v.registers[reg] % 100 / 10
+	v.memory[v.index+2] = v.registers[reg] % 10
+}
+
+// LD [I], Vx - store reg V0 through Vx into mem i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx55
+func (v *VM) insLDIx(reg uint8) {
+	for ix := uint16(0); ix <= uint16(reg); ix++ {
+		addr := v.index + ix
+		if addr >= memSize {
+			break
+		}
+		v.memory[addr] = v.registers[ix]
+	}
+}
+
+// LD Vx, [I] - load reg V0 through Vx from mem i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx65
+func (v *VM) insLDxI(reg uint8) {
+	for ix := uint16(0); ix <= uint16(reg); ix++ {
+		if v.index+ix >= memSize {
+			break
+		}
+		v.registers[ix] = v.memory[v.index+ix]
+	}
+}
+
+// LD Vx, K - Wait for any key in Vx to be pressed - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx0A
+func (v *VM) insLDxK(reg uint8) {
+	if len(v.Keys) > 0 {
+		console.Errorf("%+v\n", v.Keys)
+		// Get last key pressed if there are multiple and exit the PC loop
+		v.registers[reg] = v.Keys[0]
+		return
+	}
+
+	// Madness, *decrement* the PC to keep the fetch loop waiting here
+	v.pc -= 2
+}
+
 //
 // Two params: x (nibble) indicating a V register, and nn byte
 //
@@ -95,6 +181,12 @@ func (v *VM) insSNEvb(reg uint8, byteData uint8) {
 	if v.registers[reg] != byteData {
 		v.pc += 2
 	}
+}
+
+// RND Vx, byte - random value AND'ed with byte nn store in Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Cxkk
+func (v *VM) insRNDvb(reg uint8, byteData uint8) {
+	r := uint8(rand.Intn(256))
+	v.registers[reg] = r & byteData
 }
 
 //
@@ -133,18 +225,18 @@ func (v *VM) insADDxy(regx uint8, regy uint8) {
 	regxPrev := v.registers[regx]
 	v.registers[regx] = v.registers[regx] + v.registers[regy]
 	if v.registers[regx] < regxPrev {
-		v.registers[0xF] = 1
+		v.SetFlag(1)
 	} else {
-		v.registers[0xF] = 0
+		v.SetFlag(0)
 	}
 }
 
 // SUB Vx, Vy - Sub Vy from Vx, store result into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
 func (v *VM) insSUBxy(regx uint8, regy uint8) {
 	if v.registers[regx] > v.registers[regy] {
-		v.registers[0xF] = 1
+		v.SetFlag(1)
 	} else {
-		v.registers[0xF] = 0
+		v.SetFlag(0)
 	}
 	v.registers[regx] -= v.registers[regy]
 }
@@ -160,9 +252,9 @@ func (v *VM) insSHRxy(regx uint8, regy uint8) {
 // SUBN Vx, Vy - Sub Vx from Vy into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
 func (v *VM) insSUBNxy(regx uint8, regy uint8) {
 	if v.registers[regy] > v.registers[regx] {
-		v.registers[0xF] = 1
+		v.SetFlag(1)
 	} else {
-		v.registers[0xF] = 0
+		v.SetFlag(0)
 	}
 	v.registers[regx] = v.registers[regy] - v.registers[regx]
 }
@@ -188,36 +280,28 @@ func (v *VM) insSNExy(regx uint8, regy uint8) {
 func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 	x := v.registers[reg1] % DisplayWidth
 	y := v.registers[reg2] % DisplayHeight
-	v.registers[0xF] = 0
-
-	// FIXME: Handle edge cases, literally... need to cope with edges of display
+	v.SetFlag(0)
 
 	var row byte
 	for row = 0; row < height; row++ {
+		if y+row >= DisplayHeight {
+			return
+		}
 		spriteByte := v.memory[v.index+uint16(row)]
-		var xbit byte
-		for xbit = 0; xbit < 8; xbit++ {
-			spriteBit := (spriteByte & (0x80 >> xbit)) != 0
+		for xbit := uint8(0); xbit < 8; xbit++ {
+			if x+xbit >= DisplayWidth {
+				continue
+			}
 			// Get bit from sprite - we need to draw left to right, so we start at MSB
-			//spriteBit := (spriteByte>>(7-xbit))&1 == 1
+			//spriteBit := (spriteByte & (0x80 >> xbit))
+			spriteBit := (spriteByte >> (7 - xbit)) & 1
 			// Get bit from display
 			displayBit := v.display[x+xbit][y+row]
 			// XOR logic and setting of VF
-			if spriteBit {
-				if v.display[x+xbit][y+row] {
-					v.display[x+xbit][y+row] = false
-				} else {
-					v.display[x+xbit][y+row] = true
-				}
-
+			if spriteBit == 1 && displayBit == 1 {
+				v.SetFlag(1)
 			}
-			if displayBit && spriteBit {
-				//v.display[x+xbit][y+row] = false
-				v.registers[0xF] = 1
-			}
-			// if !displayBit && spriteBit {
-			// 	v.display[x+xbit][y+row] = true
-			// }
+			v.display[x+xbit][y+row] ^= spriteBit
 		}
 	}
 }

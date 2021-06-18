@@ -42,8 +42,8 @@ func Start(program []byte, debug bool, delay int, pixelSize int) {
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
 	ebiten.SetWindowTitle("Go CHIP-8 v" + Version)
-	ebiten.SetMaxTPS(ebiten.UncappedTPS)
-	ebiten.SetVsyncEnabled(false)
+	//ebiten.SetMaxTPS(ebiten.UncappedTPS)
+	//ebiten.SetVsyncEnabled(false)
 
 	// Run VM processor loop in a separate go-routine, with a channel used to raise errors
 	go vm.Run(emu.errorChan, delay)
@@ -56,6 +56,12 @@ func Start(program []byte, debug bool, delay int, pixelSize int) {
 
 // Update is called every tick (1/60 [s] by default).
 func (e *chip8Emulator) Update() error {
+	// Read the keyboard
+	external.ReadKeyboard(e.vm)
+
+	// Play sound
+	external.PlaySound(e.vm)
+
 	// This is a *non-blocking* check for any errors on the channel
 	select {
 	case runtimeError := <-e.errorChan:

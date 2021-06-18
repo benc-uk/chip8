@@ -8,6 +8,7 @@ package chip8
 
 import (
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/benc-uk/chip8/pkg/console"
@@ -29,6 +30,8 @@ const DisplayHeight = 32
 // DisplayWidth standard CHIP-8 display width
 const DisplayWidth = 64
 
+const sixtyHzMicroSecs = 16700
+
 // Opcode holds a decoded opcode see: docs/opcode.md
 // IMPORTANT: the decoder will set all values BUT their use is opcode dependant
 type Opcode struct {
@@ -47,14 +50,16 @@ type VM struct {
 	registers  [16]byte
 	pc         uint16
 	index      uint16
-	timerDelay byte
-	timerSound byte
-	// TODO: Is using booleans dumb?
-	display [DisplayWidth][DisplayHeight]bool
-	stack   []uint16
+	delayTimer byte
+	soundTimer byte
+	display    [DisplayWidth][DisplayHeight]uint8
+	stack      []uint16
 
 	// Supporting fields for emulation. not part of the system architecture
 	running bool
+
+	// Keys that are currently pressed, values are 0x0 ~ 0xF
+	Keys []uint8
 }
 
 func NewVM(debug bool) *VM {
@@ -73,6 +78,9 @@ func NewVM(debug bool) *VM {
 
 // Run the VM processor with a channel for reporting errors
 func (v *VM) Run(errors chan error, delay int) {
+	// Start delay timer loop in seperate goroutine
+	go v.timerLoop()
+
 	// Infinite loop, executing processor cycles
 	for {
 		err := v.Cycle()
@@ -107,12 +115,28 @@ func (v *VM) Cycle() error {
 	opcode.dump()
 
 	// Execute parses the opcode and excutes instructions
-	v.execute(opcode)
+	err = v.execute(opcode)
+	if err != nil {
+		return err
+	}
 
 	// Debug VM system state, PC, index, registers, stack etc
 	v.dump()
 
 	return nil
+}
+
+func (v *VM) timerLoop() {
+	for {
+		if v.delayTimer > 0 {
+			v.delayTimer--
+		}
+		if v.soundTimer > 0 {
+			v.soundTimer--
+		}
+		// Wait for 60hz
+		time.Sleep(time.Duration(sixtyHzMicroSecs) * time.Microsecond)
+	}
 }
 
 func (v *VM) fetch() (uint16, error) {
@@ -144,7 +168,7 @@ func decode(rawOpcode uint16) Opcode {
 	}
 }
 
-func (v *VM) execute(o Opcode) {
+func (v *VM) execute(o Opcode) error {
 	switch o.kind {
 	case 0x0:
 		{
@@ -190,24 +214,66 @@ func (v *VM) execute(o Opcode) {
 				v.insSUBNxy(o.x, o.y)
 			case 0xE:
 				v.insSHLxy(o.x, o.y)
+			default:
+				return SystemError{
+					reason: fmt.Sprintf("Invalid opcode %+v", o),
+					code:   errorBadOpcode,
+				}
 			}
 		}
-	case 0xA:
-		v.insLDI(o.nnn)
 	case 0x9:
 		v.insSNExy(o.x, o.y)
+	case 0xA:
+		v.insLDI(o.nnn)
+	case 0xC:
+		v.insRNDvb(o.x, o.nn)
 	case 0xD:
 		v.insDRW(o.x, o.y, o.n)
+	case 0xE:
+		{
+			switch o.nn {
+			case 0x9E:
+				v.insSKPx(o.x)
+			case 0xA1:
+				v.insSKNPx(o.x)
+			}
+		}
 	case 0xF:
 		{
 			switch o.nn {
+			case 0x07:
+				v.insLDxDT(o.x)
+			case 0x0A:
+				v.insLDxK(o.x)
+			case 0x15:
+				v.insLDDTx(o.x)
+			case 0x18:
+				v.insLDSTx(o.x)
 			case 0x1E:
 				v.insADDIx(o.x)
 			case 0x29:
 				v.insLDf(o.x)
+			case 0x33:
+				v.insLDBx(o.x)
+			case 0x55:
+				v.insLDIx(o.x)
+			case 0x65:
+				v.insLDxI(o.x)
+			default:
+				return SystemError{
+					reason: fmt.Sprintf("Invalid opcode %+v", o),
+					code:   errorBadOpcode,
+				}
 			}
 		}
+	default:
+		return SystemError{
+			reason: fmt.Sprintf("Invalid opcode %+v", o),
+			code:   errorBadOpcode,
+		}
 	}
+
+	return nil
 }
 
 func (v *VM) reset() {
@@ -242,7 +308,7 @@ func (v *VM) LoadProgram(pgm []byte) {
 	console.Successf("Loaded %d bytes into memory OK\n", len(pgm))
 }
 
-func (v *VM) DisplayValueAt(x int, y int) bool {
+func (v *VM) DisplayValueAt(x int, y int) uint8 {
 	return v.display[x][y]
 }
 
@@ -252,4 +318,8 @@ func (v *VM) GetFlag() uint8 {
 
 func (v *VM) SetFlag(val uint8) {
 	v.registers[0xF] = val
+}
+
+func (v *VM) GetSoundTimer() uint8 {
+	return v.soundTimer
 }

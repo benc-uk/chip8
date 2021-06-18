@@ -31,14 +31,14 @@ func Test_InsCLS(t *testing.T) {
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			p := v.display[x][y]
-			assert.Equal(t, p, false, "pixel is not off")
+			assert.Equal(t, p, uint8(0), "pixel is not off")
 		}
 	}
 }
 
 func Test_InsRET(t *testing.T) {
 	v := vmForTest()
-	var addr1 uint16 = uint16(ProgBase + rand.Intn(0x3000))
+	addr1 := randAddress()
 	prePC1 := v.pc
 
 	v.insCALL(addr1)
@@ -53,22 +53,22 @@ func Test_InsRET(t *testing.T) {
 
 func Test_InsLDi(t *testing.T) {
 	v := vmForTest()
-	var addr1 uint16 = uint16(ProgBase + rand.Intn(0x3000))
+	addr1 := randAddress()
 	v.insLDI(addr1)
 	assert.Equal(t, v.index, addr1, "index wasn't set correctly")
 }
 
 func Test_InsJP(t *testing.T) {
 	v := vmForTest()
-	var addr1 uint16 = uint16(ProgBase + rand.Intn(0x3000))
+	addr1 := randAddress()
 	v.insJP(addr1)
 	assert.Equal(t, v.pc, addr1, "pc wasn't set correctly")
 }
 
 func Test_InsCALL(t *testing.T) {
 	v := vmForTest()
-	var addr1 uint16 = uint16(ProgBase + rand.Intn(0x3000))
-	var addr2 uint16 = uint16(ProgBase + rand.Intn(0x3000))
+	addr1 := randAddress()
+	addr2 := randAddress()
 	prePC1 := v.pc
 	preStackLen := len(v.stack)
 
@@ -104,6 +104,87 @@ func Test_InsADDIx(t *testing.T) {
 	assert.Equal(t, v.index, prevI+uint16(v.registers[r1]), "index wasn't set correctly")
 }
 
+func Test_InsLDIx(t *testing.T) {
+	v := vmForTest()
+	reg := uint8(0xE)
+	v.insLDIx(reg)
+
+	for ix := uint16(0); ix <= uint16(reg); ix++ {
+		if v.index+ix >= memSize {
+			break
+		}
+		assert.Equal(t, v.registers[ix], v.memory[v.index+ix], "memory wasn't set correctly")
+	}
+	v = vmForTest()
+	reg = uint8(0x0)
+	v.insLDIx(reg)
+	for ix := uint16(0); ix <= uint16(reg); ix++ {
+		if v.index+ix >= memSize {
+			break
+		}
+		assert.Equal(t, v.registers[ix], v.memory[v.index+ix], "memory wasn't set correctly")
+	}
+}
+
+func Test_insLDxI(t *testing.T) {
+	v := vmForTest()
+	reg := uint8(0xE)
+	fillMem(v)
+	v.insLDxI(reg)
+	for ix := uint16(0); ix <= uint16(reg); ix++ {
+		if v.index+ix >= memSize {
+			break
+		}
+		assert.Equal(t, v.memory[v.index+ix], v.registers[ix], "memory wasn't set correctly")
+	}
+	v = vmForTest()
+	fillMem(v)
+	reg = uint8(0x0)
+	v.insLDxI(reg)
+	for ix := uint16(0); ix <= uint16(reg); ix++ {
+		if v.index+ix >= memSize {
+			break
+		}
+		assert.Equal(t, v.memory[v.index+ix], v.registers[ix], "memory wasn't set correctly")
+	}
+}
+
+func Test_insLDBx(t *testing.T) {
+	v := vmForTest()
+	reg := randRegister()
+	v.registers[reg] = 123
+	v.insLDBx(reg)
+	assert.Equal(t, uint8(1), v.memory[v.index], "memory wasn't set correctly")
+	assert.Equal(t, uint8(2), v.memory[v.index+1], "memory wasn't set correctly")
+	assert.Equal(t, uint8(3), v.memory[v.index+2], "memory wasn't set correctly")
+	reg = randRegister()
+	v.registers[reg] = 42
+	v.insLDBx(reg)
+	assert.Equal(t, uint8(0), v.memory[v.index], "memory wasn't set correctly")
+	assert.Equal(t, uint8(4), v.memory[v.index+1], "memory wasn't set correctly")
+	assert.Equal(t, uint8(2), v.memory[v.index+2], "memory wasn't set correctly")
+	reg = randRegister()
+	v.registers[reg] = 9
+	v.insLDBx(reg)
+	assert.Equal(t, uint8(0), v.memory[v.index], "memory wasn't set correctly")
+	assert.Equal(t, uint8(0), v.memory[v.index+1], "memory wasn't set correctly")
+	assert.Equal(t, uint8(9), v.memory[v.index+2], "memory wasn't set correctly")
+}
+
+func Test_insLDDTx(t *testing.T) {
+	v := vmForTest()
+	reg := randRegister()
+	v.insLDDTx(reg)
+	assert.Equal(t, v.delayTimer, v.registers[reg], "delay timer wasn't set correctly")
+}
+
+func Test_insLDxDT(t *testing.T) {
+	v := vmForTest()
+	reg := randRegister()
+	v.insLDxDT(reg)
+	assert.Equal(t, v.registers[reg], v.delayTimer, "reg wasn't set to delay timer")
+}
+
 //
 // Two params: x (nibble) indicating a V register, and nn byte
 //
@@ -113,7 +194,7 @@ func Test_InsLDvb(t *testing.T) {
 	r := uint8(0x7)
 	data := uint8(0xE)
 	v.insLDvb(r, data)
-	assert.Equal(t, v.registers[r], data, "register wasn't set correctly")
+	assert.Equal(t, data, v.registers[r], "register wasn't set correctly")
 }
 
 func Test_InsADDvb(t *testing.T) {
@@ -317,19 +398,29 @@ func vmForTest() *VM {
 		r := rand.Int()
 		v.registers[i] = uint8(r)
 	}
-	v.pc = uint16(ProgBase + rand.Intn(0x3000) + 1)
-	v.index = uint16(ProgBase + rand.Intn(0x3000) + 1)
-	v.stack = append(v.stack, uint16(rand.Intn(0x3000)))
+	v.pc = uint16(ProgBase + rand.Intn(0xE00) + 1)
+	v.index = uint16(ProgBase + rand.Intn(0xE00) + 1)
+	v.stack = append(v.stack, uint16(rand.Intn(0xE00)))
 	v.registers[0xf] = 4
 
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			r := rand.Intn(100)
-			v.display[x][y] = (r > 50)
+			pixel := uint8(0)
+			if r > 50 {
+				pixel = uint8(1)
+			}
+			v.display[x][y] = pixel
 		}
 	}
 
 	return v
+}
+
+func fillMem(v *VM) {
+	for ix := ProgBase; ix < memSize; ix++ {
+		v.memory[ix] = randByte()
+	}
 }
 
 // Random byte value

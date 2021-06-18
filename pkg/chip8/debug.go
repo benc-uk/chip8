@@ -24,6 +24,7 @@ func (v VM) dump() {
 		return
 	}
 	console.Successf("> SYS >>> pc:%04X i:%04X\n", v.pc, v.index)
+	console.Successf("> TIM >>> dt:%02X st:%02X\n", v.delayTimer, v.soundTimer)
 
 	// Dump registers
 	console.Successf("> SYS >>> ")

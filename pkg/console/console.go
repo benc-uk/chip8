@@ -8,6 +8,8 @@ package console
 
 import (
 	"fmt"
+	"os"
+	"strings"
 )
 
 // Debug outputs strings plus newline in magenta
@@ -23,9 +25,9 @@ func Debugf(f string, a ...interface{}) {
 // Info outputs strings plus newline in blue
 func Info(s string) {
 	// Suppress output in tests
-	// if strings.HasSuffix(os.Args[0], ".test") {
-	// 	return
-	// }
+	if strings.HasSuffix(os.Args[0], ".test") {
+		return
+	}
 	fmt.Printf("\033[1;34m%s\033[0m\n", s)
 }
 

@@ -19,7 +19,7 @@
         const pgmName = document.querySelector("#program").value;
         emuFrame.setAttribute("data-pgm-name", "roms/" + pgmName);
         emuFrame.setAttribute("data-delay", 1);
-        emuFrame.setAttribute("data-debug", "false");
+        emuFrame.setAttribute("data-debug", document.querySelector("#debugCB").checked );
         document.body.appendChild(emuFrame);
       }
 
@@ -48,15 +48,15 @@
   </head>
   <body onload="createStoppedEmulator();">
     <select id="program">
-      <option>simple.ch8</option>
-      <option>bc-test.ch8</option>
-      <option>ibm.ch8</option>
-      <option>test-opcode.ch8</option>
-      <option>GAME</option>
-      <option>MERLIN</option>
+      <option>BRIX</option>
+      <option>INVADERS</option>
+      <option>TANK</option>
+      <option>TETRIS</option>
     </select>
     <button onclick="createRunningEmulator()">LOAD PROGRAM</button>
     <button onclick="createStoppedEmulator()">REBOOT SYSTEM</button>
+    <input type="checkbox" id="debugCB"></input>
+    <label style="word-wrap:break-word" for="debugCB">DEBUG</label>
     <footer>
       CHIP-8 Emulator in Go, Ben Coleman<br />
       <a href="https://github.com/benc-uk/chip8"> GitHub Project </a>

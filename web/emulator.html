@@ -89,6 +89,9 @@
           if (code == 51) {
             reason = "Memory address out of bounds";
           }
+          if (code == 52) {
+            reason = "Invalid Opcode";
+          }
           pre.innerText = `+++ Guru Meditation!\n+++ CODE: ${code}\n+++ REASON: ${reason}`;
           document.body.append(pre);
           var canvas = document.querySelector("canvas");
