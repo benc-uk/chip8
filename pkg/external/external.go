@@ -8,17 +8,14 @@ package external
 
 import (
 	"image/color"
-	"log"
-	"os"
 
 	"github.com/benc-uk/chip8/pkg/chip8"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-var audioContext *audio.Context
-var wav []byte
+// var audioContext *audio.Context
+// var wav []byte
 
 func RenderDisplay(v *chip8.VM, screen *ebiten.Image, pixelSize int) {
 	screen.Clear()
@@ -86,19 +83,19 @@ func ReadKeyboard(v *chip8.VM) {
 
 func PlaySound(v *chip8.VM) {
 	if v.GetSoundTimer() > 0 {
-		bleepPlay := audio.NewPlayerFromBytes(audioContext, wav)
-		bleepPlay.SetVolume(1)
-		bleepPlay.Play()
+		// bleepPlay := audio.NewPlayerFromBytes(audioContext, wav)
+		// bleepPlay.SetVolume(1)
+		// bleepPlay.Play()
 	}
 }
 
-func init() {
-	sampleRate := 32000
+// func init() {
+// 	sampleRate := 32000
 
-	audioContext = audio.NewContext(sampleRate)
-	var err error
-	wav, err = os.ReadFile("bleep.wav")
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+// 	audioContext = audio.NewContext(sampleRate)
+// 	var err error
+// 	wav, err = os.ReadFile("bleep.wav")
+// 	if err != nil {
+// 		log.Fatalln(err)
+// 	}
+// }
