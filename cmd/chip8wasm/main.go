@@ -17,6 +17,9 @@ import (
 	"github.com/benc-uk/chip8/pkg/emulator"
 )
 
+const loadErrorCode = 10
+const generalErrorCode = 1
+
 func main() {
 	log.Println("WASM emulator starting")
 
@@ -27,6 +30,11 @@ func main() {
 	log.Printf("Fetching program file '%s' via HTTP\n", os.Args[0])
 	resp, err := http.Get(os.Args[0])
 	checkError(err)
+	if resp.StatusCode != 200 {
+		log.Printf("Failed to download: %s", resp.Status)
+		os.Exit(resp.StatusCode)
+	}
+
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	checkError(err)
@@ -48,5 +56,5 @@ func checkError(err error) {
 	}
 
 	log.Fatalln(err)
-	os.Exit(1)
+	os.Exit(generalErrorCode)
 }

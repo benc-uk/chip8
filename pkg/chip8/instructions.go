@@ -7,8 +7,6 @@
 
 package chip8
 
-import "github.com/benc-uk/chip8/pkg/console"
-
 //
 // Zero params
 //
@@ -40,7 +38,7 @@ func (v *VM) insRET() {
 //
 
 // LD I, addr - load nnn into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Annn
-func (v *VM) insLDi(addr uint16) {
+func (v *VM) insLDI(addr uint16) {
 	v.index = addr
 }
 
@@ -64,6 +62,11 @@ func (v *VM) insLDf(reg uint8) {
 	// NOTE: Each font sprite is 5 bytes "high"
 	val := uint16(v.registers[reg]) * 5
 	v.index = FontBase + val
+}
+
+// ADD I, Vx - Add value in Vx to i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx1E
+func (v *VM) insADDIx(reg uint8) {
+	v.index += uint16(v.registers[reg])
 }
 
 //
@@ -136,8 +139,13 @@ func (v *VM) insADDxy(regx uint8, regy uint8) {
 	}
 }
 
-// SUB Vx, Vy - Sub Vy from Vx, store result into Vx. SETS VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
+// SUB Vx, Vy - Sub Vy from Vx, store result into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
 func (v *VM) insSUBxy(regx uint8, regy uint8) {
+	if v.registers[regx] > v.registers[regy] {
+		v.registers[0xF] = 1
+	} else {
+		v.registers[0xF] = 0
+	}
 	v.registers[regx] -= v.registers[regy]
 }
 
@@ -149,14 +157,27 @@ func (v *VM) insSHRxy(regx uint8, regy uint8) {
 	// v.registers[regx] = v.registers[regy] >> 1
 }
 
-// SUBN Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
+// SUBN Vx, Vy - Sub Vx from Vy into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
 func (v *VM) insSUBNxy(regx uint8, regy uint8) {
-	console.Error("NOT IMPLEMENTED")
+	if v.registers[regy] > v.registers[regx] {
+		v.registers[0xF] = 1
+	} else {
+		v.registers[0xF] = 0
+	}
+	v.registers[regx] = v.registers[regy] - v.registers[regx]
 }
 
-// SHL Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE
+// SHL Vx, Vy - Most sig bit of Vx into VF, shift Vx left to mult by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE
 func (v *VM) insSHLxy(regx uint8, regy uint8) {
-	console.Error("NOT IMPLEMENTED")
+	v.registers[0xF] = v.registers[regx] >> 7
+	v.registers[regx] <<= 1
+}
+
+// SHL Vx, Vy - Skip PC if Vx != Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#9xy0
+func (v *VM) insSNExy(regx uint8, regy uint8) {
+	if v.registers[regx] != v.registers[regy] {
+		v.pc += 2
+	}
 }
 
 //
@@ -176,18 +197,27 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 		spriteByte := v.memory[v.index+uint16(row)]
 		var xbit byte
 		for xbit = 0; xbit < 8; xbit++ {
+			spriteBit := (spriteByte & (0x80 >> xbit)) != 0
 			// Get bit from sprite - we need to draw left to right, so we start at MSB
-			spriteBit := (spriteByte>>(7-xbit))&1 == 1
+			//spriteBit := (spriteByte>>(7-xbit))&1 == 1
 			// Get bit from display
 			displayBit := v.display[x+xbit][y+row]
 			// XOR logic and setting of VF
+			if spriteBit {
+				if v.display[x+xbit][y+row] {
+					v.display[x+xbit][y+row] = false
+				} else {
+					v.display[x+xbit][y+row] = true
+				}
+
+			}
 			if displayBit && spriteBit {
-				v.display[x+xbit][y+row] = false
+				//v.display[x+xbit][y+row] = false
 				v.registers[0xF] = 1
 			}
-			if !displayBit && spriteBit {
-				v.display[x+xbit][y+row] = true
-			}
+			// if !displayBit && spriteBit {
+			// 	v.display[x+xbit][y+row] = true
+			// }
 		}
 	}
 }

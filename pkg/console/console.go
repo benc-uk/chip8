@@ -8,8 +8,6 @@ package console
 
 import (
 	"fmt"
-	"os"
-	"strings"
 )
 
 // Debug outputs strings plus newline in magenta
@@ -24,17 +22,19 @@ func Debugf(f string, a ...interface{}) {
 
 // Info outputs strings plus newline in blue
 func Info(s string) {
-	if strings.HasSuffix(os.Args[0], ".test") {
-		return
-	}
+	// Suppress output in tests
+	// if strings.HasSuffix(os.Args[0], ".test") {
+	// 	return
+	// }
 	fmt.Printf("\033[1;34m%s\033[0m\n", s)
 }
 
 // Infof outputs formatted strings in blue
 func Infof(f string, a ...interface{}) {
-	if strings.HasSuffix(os.Args[0], ".test") {
-		return
-	}
+	// Suppress output in tests
+	// if strings.HasSuffix(os.Args[0], ".test") {
+	// 	return
+	// }
 	fmt.Printf("\033[1;34m"+f+"\033[0m", a...)
 }
 
@@ -60,16 +60,16 @@ func Warningf(f string, a ...interface{}) {
 
 // Success outputs strings plus newline in blue
 func Success(s string) {
-	if strings.HasSuffix(os.Args[0], ".test") {
-		return
-	}
+	// if strings.HasSuffix(os.Args[0], ".test") {
+	// 	return
+	// }
 	fmt.Printf("\033[1;32m%s\033[0m\n", s)
 }
 
 // Successf outputs formatted strings in green
 func Successf(f string, a ...interface{}) {
-	if strings.HasSuffix(os.Args[0], ".test") {
-		return
-	}
+	// if strings.HasSuffix(os.Args[0], ".test") {
+	// 	return
+	// }
 	fmt.Printf("\033[1;32m"+f+"\033[0m", a...)
 }

@@ -2,6 +2,7 @@ package emulator
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 
@@ -58,8 +59,15 @@ func (e *chip8Emulator) Update() error {
 	// This is a *non-blocking* check for any errors on the channel
 	select {
 	case runtimeError := <-e.errorChan:
-		console.Errorf("Unrecoverable system error: %s\n", runtimeError)
-		os.Exit(1)
+		// Try to see if we got a SystemError
+		se, isSystemError := runtimeError.(chip8.SystemError)
+		// Default code
+		code := 50
+		if isSystemError {
+			code = se.Code()
+		}
+		log.Printf("Unrecoverable system error: %s", runtimeError.Error())
+		os.Exit(code)
 	default:
 		// Noop
 		_ = true

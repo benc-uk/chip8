@@ -8,7 +8,6 @@ package chip8
 
 import (
 	"encoding/binary"
-	"errors"
 	"time"
 
 	"github.com/benc-uk/chip8/pkg/console"
@@ -74,14 +73,17 @@ func NewVM(debug bool) *VM {
 
 // Run the VM processor with a channel for reporting errors
 func (v *VM) Run(errors chan error, delay int) {
+	// Infinite loop, executing processor cycles
 	for {
 		err := v.Cycle()
+		// Any errors from the processor cycle, pass to the channel to notify listeners
 		if err != nil {
 			errors <- err
-
 			// Halt the processor
 			return
 		}
+
+		// Delay to slow down the processor
 		time.Sleep(time.Duration(delay) * time.Microsecond)
 	}
 }
@@ -115,7 +117,11 @@ func (v *VM) Cycle() error {
 
 func (v *VM) fetch() (uint16, error) {
 	if v.pc >= memSize {
-		return 0, errors.New("PC went outside of memory bounds")
+		err := SystemError{
+			reason: "PC went outside of memory bounds",
+			code:   errorCodeAddress,
+		}
+		return 0, err
 	}
 
 	op := binary.BigEndian.Uint16(v.memory[v.pc : v.pc+2])
@@ -158,7 +164,7 @@ func (v *VM) execute(o Opcode) {
 	case 0x4:
 		v.insSNEvb(o.x, o.nn)
 	case 0x5:
-		v.insSEvb(o.x, o.y)
+		v.insSExy(o.x, o.y)
 	case 0x6:
 		v.insLDvb(o.x, o.nn)
 	case 0x7:
@@ -187,12 +193,16 @@ func (v *VM) execute(o Opcode) {
 			}
 		}
 	case 0xA:
-		v.insLDi(o.nnn)
+		v.insLDI(o.nnn)
+	case 0x9:
+		v.insSNExy(o.x, o.y)
 	case 0xD:
 		v.insDRW(o.x, o.y, o.n)
 	case 0xF:
 		{
 			switch o.nn {
+			case 0x1E:
+				v.insADDIx(o.x)
 			case 0x29:
 				v.insLDf(o.x)
 			}

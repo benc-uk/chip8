@@ -18,6 +18,11 @@ footer a {
   color: #2f8b2f;
 }
 
+hr {
+  border-top: 1px solid #2f8b2f;
+  border-bottom: 1px solid #2f8b2f;
+}
+
 iframe {
   border: 12px solid #000000;
   background-color: #000000;
