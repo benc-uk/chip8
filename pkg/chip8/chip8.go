@@ -30,6 +30,7 @@ const DisplayHeight = 32
 // DisplayWidth standard CHIP-8 display width
 const DisplayWidth = 64
 
+// Used for the timer loop to pause 1/60 second
 const sixtyHzMicroSecs = 16700
 
 // Opcode holds a decoded opcode see: docs/opcode.md
@@ -56,7 +57,8 @@ type VM struct {
 	stack      []uint16
 
 	// Supporting fields for emulation. not part of the system architecture
-	running bool
+	running        bool
+	DisplayUpdated bool
 
 	// Keys that are currently pressed, values are 0x0 ~ 0xF
 	Keys []uint8
@@ -225,6 +227,8 @@ func (v *VM) execute(o Opcode) error {
 		v.insSNExy(o.x, o.y)
 	case 0xA:
 		v.insLDI(o.nnn)
+	case 0xB:
+		v.insJPV0(o.nnn)
 	case 0xC:
 		v.insRNDvb(o.x, o.nn)
 	case 0xD:

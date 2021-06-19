@@ -84,6 +84,13 @@ func Test_InsCALL(t *testing.T) {
 	assert.Equal(t, v.stack[preStackLen+1], prePC2, "stack content is wrong")
 }
 
+func Test_InsJPV0(t *testing.T) {
+	v := vmForTest()
+	addr1 := randAddress()
+	v.insJPV0(addr1)
+	assert.Equal(t, v.pc, addr1+uint16(v.registers[0]), "pc wasn't set correctly")
+}
+
 //
 // One param: nibble in x
 //

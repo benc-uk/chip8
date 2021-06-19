@@ -14,7 +14,7 @@
       "env": {
         "DISPLAY": "192.168.0.34:0"
       },
-      "args": ["-debug=false", "-slow=0", "roms/key-test.ch8"]
+      "args": ["-debug=false", "-slow=0", "-scale=3", "roms/ibm.ch8"]
     }
   ]
 }

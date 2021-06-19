@@ -9,8 +9,6 @@ package chip8
 
 import (
 	"math/rand"
-
-	"github.com/benc-uk/chip8/pkg/console"
 )
 
 //
@@ -24,6 +22,8 @@ func (v *VM) insCLS() {
 			v.display[x][y] = 0
 		}
 	}
+	//v.DisplayUpdated = true
+	//video.Clear()
 }
 
 // RET - Return - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00EE
@@ -57,6 +57,11 @@ func (v *VM) insJP(addr uint16) {
 func (v *VM) insCALL(addr uint16) {
 	v.stack = append(v.stack, v.pc)
 	v.pc = addr
+}
+
+// JP V0, addr - jump to addr nnn +V0 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Bnnn
+func (v *VM) insJPV0(addr uint16) {
+	v.pc = addr + uint16(v.registers[0])
 }
 
 //
@@ -145,7 +150,6 @@ func (v *VM) insLDxI(reg uint8) {
 // LD Vx, K - Wait for any key in Vx to be pressed - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx0A
 func (v *VM) insLDxK(reg uint8) {
 	if len(v.Keys) > 0 {
-		console.Errorf("%+v\n", v.Keys)
 		// Get last key pressed if there are multiple and exit the PC loop
 		v.registers[reg] = v.Keys[0]
 		return
@@ -302,6 +306,9 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 				v.SetFlag(1)
 			}
 			v.display[x+xbit][y+row] ^= spriteBit
+			//video.SetPixel(int(x+xbit), int(y+row), v.display[x+xbit][y+row])
 		}
 	}
+
+	v.DisplayUpdated = true
 }
