@@ -42,12 +42,12 @@ func main() {
 
 	debug, err := strconv.ParseBool(os.Args[1])
 	checkError(err)
-	delay, err := strconv.Atoi(os.Args[2])
+	speed, err := strconv.Atoi(os.Args[2])
 	checkError(err)
 	pixelSize, err := strconv.Atoi(os.Args[3])
 	checkError(err)
 
-	emulator.Start(body, debug, delay, pixelSize)
+	emulator.Start(body, debug, speed, pixelSize)
 }
 
 func checkError(err error) {

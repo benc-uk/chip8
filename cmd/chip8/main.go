@@ -24,25 +24,25 @@ const banner = `
  ╚═════╝  ╚═════╝      ╚═════╝╚═╝  ╚═╝╚═╝╚═╝            ╚════╝`
 
 func main() {
-	var debugFlag = flag.Bool("debug", false, "Enable debug")
-	var slowFlag = flag.Int("slow", 1, "Pause the processor for this num microseconds each cycle")
-	var scaleFlag = flag.Int("scale", 10, "Scale up the size of pixels")
+	var debugFlag = flag.Bool("debug", false, "Enable debug, lots of output very slow")
+	var speedFlag = flag.Int("speed", 20, "Speed of the emulator in cycles per tick")
+	var scaleFlag = flag.Int("scale", 10, "Size of pixels, default results in a 640x320 window")
 	flag.Parse()
 
 	if len(flag.Args()) < 1 {
-		console.Error("Please supply filename of program/ROM to load")
+		console.Error("💥 Please supply filename of program/ROM to load")
 		os.Exit(1)
 	}
 	progFile := flag.Arg(0)
 
 	console.Info(banner)
 
-	console.Infof("Loading program from disk %s\n", progFile)
+	console.Infof("💾 Loading program from disk %s\n", progFile)
 	pgmBytes, err := ioutil.ReadFile(progFile)
 	if err != nil {
-		console.Errorf("Unable to load file %s\n", progFile)
+		console.Errorf("💣 Unable to load file %s\n", progFile)
 		os.Exit(1)
 	}
 
-	emulator.Start(pgmBytes, *debugFlag, *slowFlag, *scaleFlag)
+	emulator.Start(pgmBytes, *debugFlag, *speedFlag, *scaleFlag)
 }

@@ -22,7 +22,7 @@ func (v *VM) insCLS() {
 			v.display[x][y] = 0
 		}
 	}
-	//v.DisplayUpdated = true
+	v.DisplayUpdated = true
 	//video.Clear()
 }
 
@@ -304,9 +304,12 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 			// XOR logic and setting of VF
 			if spriteBit == 1 && displayBit == 1 {
 				v.SetFlag(1)
+				v.display[x+xbit][y+row] = 0
 			}
-			v.display[x+xbit][y+row] ^= spriteBit
-			//video.SetPixel(int(x+xbit), int(y+row), v.display[x+xbit][y+row])
+			if spriteBit == 1 && displayBit != 1 {
+				v.display[x+xbit][y+row] = 1
+			}
+
 		}
 	}
 

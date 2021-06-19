@@ -75,26 +75,34 @@ func NewVM(debug bool) *VM {
 		v.memory[FontBase+i] = fontByte
 	}
 
+	// Start the timer loops for the VM
+	go v.TimerLoop()
+
 	return &v
 }
 
 // Run the VM processor with a channel for reporting errors
 func (v *VM) Run(errors chan error, delay int) {
-	// Start delay timer loop in seperate goroutine
-	go v.timerLoop()
+	// Start delay timer loop in separate goroutine
+	go v.TimerLoop()
 
+	tick := 0
 	// Infinite loop, executing processor cycles
 	for {
-		err := v.Cycle()
-		// Any errors from the processor cycle, pass to the channel to notify listeners
-		if err != nil {
-			errors <- err
-			// Halt the processor
-			return
-		}
+		if tick%900000 == 0 {
+			tick = 0
+			err := v.Cycle()
 
+			// Any errors from the processor cycle, pass to the channel to notify listeners
+			if err != nil {
+				errors <- err
+				// Halt the processor
+				return
+			}
+		}
+		tick++
 		// Delay to slow down the processor
-		time.Sleep(time.Duration(delay) * time.Microsecond)
+		//time.Sleep(time.Duration(1) * time.Nanosecond)
 	}
 }
 
@@ -128,7 +136,7 @@ func (v *VM) Cycle() error {
 	return nil
 }
 
-func (v *VM) timerLoop() {
+func (v *VM) TimerLoop() {
 	for {
 		if v.delayTimer > 0 {
 			v.delayTimer--

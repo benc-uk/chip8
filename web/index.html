@@ -18,20 +18,22 @@
         emuFrame = createEmuFrame();
         const pgmName = document.querySelector("#program").value;
         emuFrame.setAttribute("data-pgm-name", "roms/" + pgmName);
-        emuFrame.setAttribute("data-delay", 1);
-        emuFrame.setAttribute("data-debug", document.querySelector("#debugCB").checked );
-        document.body.appendChild(emuFrame);
+        emuFrame.setAttribute(
+          "data-speed",
+          document.querySelector("#speed").value
+        );
+        document.querySelector("#wrapper").appendChild(emuFrame);
       }
 
       async function createStoppedEmulator() {
         removeFrame();
-        document.body.appendChild(createEmuFrame());
+        document.querySelector("#wrapper").appendChild(createEmuFrame());
       }
 
       function removeFrame() {
         oldFrame = document.querySelector("#emulator");
         if (oldFrame) {
-          document.body.removeChild(oldFrame);
+          document.querySelector("#wrapper").removeChild(oldFrame);
         }
       }
 
@@ -48,20 +50,52 @@
   </head>
   <body onload="createStoppedEmulator();">
     <select id="program">
+      <option>ASTRODODGE</option>
       <option>BRIX</option>
+      <option>GLITCHGHOST</option>
       <option>INVADERS</option>
+      <option>MERLIN</option>
+      <option>OUTLAW</option>
+      <option>RPS</option>
+      <option>SLIPPERYSLOPE</option>
+      <option>SNAKE</option>
+      <option>SPACEJAM</option>
       <option>TANK</option>
       <option>TETRIS</option>
-      <option>snake.ch8</option>
+      <option>TICTAC</option>
     </select>
+
     <button onclick="createRunningEmulator()">LOAD PROGRAM</button>
+
     <button onclick="createStoppedEmulator()">REBOOT SYSTEM</button>
-    <input type="checkbox" id="debugCB"></input>
-    <label style="word-wrap:break-word" for="debugCB">DEBUG</label>
+
+    SPEED:
+    <select id="speed">
+      <option>10</option>
+      <option>20</option>
+      <option selected>30</option>
+      <option>40</option>
+      <option>50</option>
+      <option>60</option>
+      <option>70</option>
+      <option>80</option>
+      <option>90</option>
+      <option>500</option>
+    </select>
+
     <footer>
       CHIP-8 Emulator in Go, Ben Coleman<br />
       <a href="https://github.com/benc-uk/chip8"> GitHub Project </a>
     </footer>
+
     <hr />
+
+    <!-- the iframe with the emulator will go here -->
+    <div id="wrapper"></div>
+
+    Controls:<br />
+    Note. Each game uses different keypad inputs, you will have to experiment,
+    but WASD is common for movement<br /><br />
+    <img src="img/keys.png" width="400px" style="padding-left: 3rem" />
   </body>
 </html>

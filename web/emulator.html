@@ -16,7 +16,7 @@
   <script>
     // Size for CHIP8 not Super-CHIP8
     const CHIP8_DISPLAY_WIDTH = 64;
-    const VERSION = "0.0.1";
+    const VERSION = "0.0.2";
     // NOTE. We get our params from the iframe data attributes, hey it's not elegant but it works
     // IMO it's better than postMessage
 
@@ -57,7 +57,7 @@
       const pixelSize = Math.floor(
         window.frameElement.width / CHIP8_DISPLAY_WIDTH
       );
-      const delay = window.frameElement.getAttribute("data-delay");
+      const speed = window.frameElement.getAttribute("data-speed");
       const debugStr = window.frameElement.getAttribute("data-debug");
 
       let debug = "false";
@@ -69,7 +69,7 @@
       const go = new Go();
 
       // Kinda janky but through main is our only way of working with ebiten wasm
-      go.argv = [pgmName, debug, delay, pixelSize];
+      go.argv = [pgmName, debug, speed, pixelSize];
       const wasm = await WebAssembly.instantiateStreaming(
         fetch("chip8.wasm"),
         go.importObject

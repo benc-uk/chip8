@@ -1,7 +1,7 @@
 package emulator
 
 import (
-	"fmt"
+	_ "embed"
 	"image/color"
 	"log"
 	"os"
@@ -11,26 +11,24 @@ import (
 	"github.com/benc-uk/chip8/pkg/console"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 // Version is the emulator version
-var Version = "0.0.1"
+var Version = "0.0.2"
 var pixelColour = color.RGBA{0x00, 0xff, 0x00, 0xff}
 
 // Wrapper for ebiten implements the ebiten.Game interface
 type chip8Emulator struct {
 	vm        *chip8.VM
-	errorChan chan error
 	display   *ebiten.Image
 	pixelSize int
+	speed     int
 
 	audioContext *audio.Context
-	wav          []byte
 	bleeper      *audio.Player
 }
 
-func Start(program []byte, debug bool, delay int, pixelSize int) {
+func Start(program []byte, debug bool, speed int, pixelSize int) {
 	console.Infof("Starting CHIP-8 emulator version v%s\n\n", Version)
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "js" {
@@ -43,31 +41,20 @@ func Start(program []byte, debug bool, delay int, pixelSize int) {
 
 	// Wrap the VM in an chip8Emulator to allow us to use ebiten with it
 	emu := &chip8Emulator{
-		vm:        vm,
-		errorChan: make(chan error),
-		display:   ebiten.NewImage(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize),
-		pixelSize: pixelSize,
-	}
-
-	if runtime.GOOS == "windows" {
-		emu.audioContext = audio.NewContext(44100)
-		var err error
-		emu.wav, err = os.ReadFile("bleep.wav")
-		if err != nil {
-			log.Fatalln(err)
-		}
+		vm:           vm,
+		display:      ebiten.NewImage(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize),
+		pixelSize:    pixelSize,
+		speed:        speed,
+		audioContext: audio.NewContext(44100),
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
 	ebiten.SetWindowTitle("Go CHIP-8 v" + Version)
-	ebiten.SetMaxTPS(ebiten.UncappedTPS)
+	//ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	ebiten.SetVsyncEnabled(false)
 
-	// Run VM processor loop in a separate go-routine, with a channel used to raise errors
-	go vm.Run(emu.errorChan, delay)
-
 	if err := ebiten.RunGame(emu); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
 }
@@ -80,22 +67,25 @@ func (e *chip8Emulator) Update() error {
 	// Play sound
 	e.playSound()
 
-	// This is a *non-blocking* check for any errors on the channel
-	select {
-	case runtimeError := <-e.errorChan:
-		// Try to see if we got a SystemError
-		se, isSystemError := runtimeError.(chip8.SystemError)
-		// Default code
-		code := 50
-		if isSystemError {
-			code = se.Code()
+	// Main emulator processor loop, we execute a number of CHIP-8 processor cycles
+	// Depending on the speed
+	for c := 0; c < e.speed; c++ {
+		// This advances the processor one tick/cycle
+		runtimeError := e.vm.Cycle()
+
+		// Handle runtime errors which are always fatal
+		if runtimeError != nil {
+			se, isSystemError := runtimeError.(chip8.SystemError)
+			code := 50 // Default code
+			if isSystemError {
+				code = se.Code()
+			}
+
+			log.Printf("Unrecoverable system error: %s", runtimeError.Error())
+			os.Exit(code)
 		}
-		log.Printf("Unrecoverable system error: %s", runtimeError.Error())
-		os.Exit(code)
-	default:
-		// Noop
-		_ = true
 	}
+
 	return nil
 }
 
@@ -110,9 +100,6 @@ func (e *chip8Emulator) Draw(screen *ebiten.Image) {
 	opt.GeoM.Scale(float64(e.pixelSize), float64(e.pixelSize))
 	opt.Filter = ebiten.FilterNearest
 	screen.DrawImage(e.display, opt)
-
-	msg := fmt.Sprintf("TPS: %0.2f\nFPS: %0.2f\n", ebiten.CurrentTPS(), ebiten.CurrentFPS())
-	ebitenutil.DebugPrint(screen, msg)
 }
 
 // Layout can control scaling
