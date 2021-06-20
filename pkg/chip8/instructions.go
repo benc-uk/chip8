@@ -23,7 +23,7 @@ func (v *VM) insCLS() {
 		}
 	}
 	v.DisplayUpdated = true
-	//video.Clear()
+
 }
 
 // RET - Return - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00EE
@@ -149,6 +149,7 @@ func (v *VM) insLDxI(reg uint8) {
 
 // LD Vx, K - Wait for any key in Vx to be pressed - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx0A
 func (v *VM) insLDxK(reg uint8) {
+
 	if len(v.Keys) > 0 {
 		// Get last key pressed if there are multiple and exit the PC loop
 		v.registers[reg] = v.Keys[0]
@@ -255,7 +256,8 @@ func (v *VM) insSHRxy(regx uint8, regy uint8) {
 
 // SUBN Vx, Vy - Sub Vx from Vy into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
 func (v *VM) insSUBNxy(regx uint8, regy uint8) {
-	if v.registers[regy] > v.registers[regx] {
+	// IMPORTANT: overflow when greater OR equal
+	if v.registers[regy] >= v.registers[regx] {
 		v.SetFlag(1)
 	} else {
 		v.SetFlag(0)
@@ -306,7 +308,8 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 				v.SetFlag(1)
 				v.display[x+xbit][y+row] = 0
 			}
-			if spriteBit == 1 && displayBit != 1 {
+			//if spriteBit == 1 && displayBit != 1 {
+			if spriteBit != displayBit {
 				v.display[x+xbit][y+row] = 1
 			}
 
