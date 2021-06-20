@@ -112,7 +112,7 @@ func (v *VM) Cycle() error {
 		return nil
 	}
 
-	debug("______________________________________________________")
+	debugf("============== PC: %02X ==================\n", v.pc)
 
 	// First get the 16 bit opcode at the current PC
 	opcodeRaw, err := v.fetch()
@@ -122,7 +122,7 @@ func (v *VM) Cycle() error {
 
 	// Decode the raw opcode into an parsed Opcode
 	opcode := decode(opcodeRaw)
-	opcode.dump()
+	//opcode.dump()
 
 	// Execute parses the opcode and excutes instructions
 	err = v.execute(opcode)
@@ -159,7 +159,7 @@ func (v *VM) fetch() (uint16, error) {
 	}
 
 	op := binary.BigEndian.Uint16(v.memory[v.pc : v.pc+2])
-	debugf("> FET >>> %04X (%02X)\n", v.memory[v.pc:v.pc+2], op)
+	debugf("> FET >>> %04X\n", v.memory[v.pc:v.pc+2])
 
 	// VERY IMPORTANT! Move the PC to the next address in memory
 	v.pc = v.pc + 2

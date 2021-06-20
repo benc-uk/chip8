@@ -23,13 +23,12 @@ func (v VM) dump() {
 	if !enableDebug {
 		return
 	}
-	console.Successf("> SYS >>> pc:%04X i:%04X\n", v.pc, v.index)
-	console.Successf("> TIM >>> dt:%02X st:%02X\n", v.delayTimer, v.soundTimer)
+	console.Successf("> SYS >>> PC:%04X  I:%04X  DT:%02X  ST:%02X \n", v.pc, v.index, v.delayTimer, v.soundTimer)
 
 	// Dump registers
-	console.Successf("> SYS >>> ")
+	console.Successf("> REG >>> ")
 	for i := range v.registers {
-		console.Successf("v%d:%02X ", i, v.registers[i])
+		console.Successf("v%X:%02X  ", i, v.registers[i])
 	}
 	console.Successf("\n")
 
