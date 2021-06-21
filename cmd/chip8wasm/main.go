@@ -46,7 +46,7 @@ func main() {
 	pixelSize, err := strconv.Atoi(os.Args[3])
 	checkError(err)
 
-	emulator.Start(body, debug, speed, pixelSize)
+	emulator.Start(body, debug, speed, pixelSize, "#00ff00", "#000000")
 }
 
 func checkError(err error) {

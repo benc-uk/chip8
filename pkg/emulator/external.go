@@ -1,5 +1,5 @@
 //
-// CHIP-8 - Input and output to filesystem, keyboard & display
+// CHIP-8 - Emulator input and output to filesystem, keyboard & display
 // Ben C, June 2021
 // Notes:
 //
@@ -17,12 +17,12 @@ import (
 )
 
 func (e *chip8Emulator) renderDisplay() {
-	e.display.Clear()
+	e.display.Fill(e.bgColor)
 
 	for y := 0; y < chip8.DisplayHeight; y++ {
 		for x := 0; x < chip8.DisplayWidth; x++ {
 			if e.vm.DisplayValueAt(x, y) == 1 {
-				e.display.Set(x, y, pixelColour)
+				e.display.Set(x, y, e.fgColor)
 			}
 		}
 	}
@@ -37,7 +37,7 @@ func (e *chip8Emulator) readKeyboard() {
 		e.vm.SetDebug(!e.vm.IsDebugging())
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
-		e.Reset()
+		e.SoftReset()
 	}
 
 	e.vm.Keys = []uint8{}

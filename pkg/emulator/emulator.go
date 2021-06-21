@@ -1,6 +1,13 @@
+//
+// CHIP-8 - Emulator wraps the CHIP-8 VM and allows us to interact with it
+// Ben C, June 2021
+// Notes:
+//
+
 package emulator
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"os"
@@ -16,7 +23,8 @@ import (
 
 // Version is the emulator version
 var Version = "0.0.2"
-var pixelColour = color.RGBA{0x00, 0xff, 0x00, 0xff}
+
+//var pixelColour = color.RGBA{0x00, 0xff, 0x00, 0xff}
 
 // Wrapper for ebiten implements the ebiten.Game interface
 type chip8Emulator struct {
@@ -25,23 +33,38 @@ type chip8Emulator struct {
 	pixelSize int
 	speed     int
 	paused    bool
-	pgmData   []byte
+	pgmData   []byte // Only stored so we can do a soft reset
+	fgColor   color.RGBA
+	bgColor   color.RGBA
 
 	audioContext *audio.Context
 	bleeper      *audio.Player
 }
 
-func Start(program []byte, debug bool, speed int, pixelSize int) {
+// Start is called by the WASM and console main.go to start everything
+func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string, bgColor string) {
 	console.Infof("Starting CHIP-8 emulator version v%s\n\n", Version)
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "js" {
 		ebiten.SetFullscreen(true)
 	}
 
+	if speed < 1 {
+		log.Fatalln("Speed must be greater than 0")
+	}
+	if pixelSize < 1 || pixelSize > 60 {
+		log.Fatalln("Pixel size must be be between 1 and 60")
+	}
+	fgC, err := parseHexColor(fgColor)
+	checkErr(err)
+	bgC, err := parseHexColor(bgColor)
+	checkErr(err)
+
 	// Create a new CHIP-8 virtual machine, and load program into it
 	vm := chip8.NewVM()
 	vm.SetDebug(debug)
-	vm.LoadProgram(program)
+	err = vm.LoadProgram(program)
+	checkErr(err)
 
 	// Wrap the VM in an chip8Emulator to allow us to use ebiten with it
 	emu := &chip8Emulator{
@@ -51,6 +74,8 @@ func Start(program []byte, debug bool, speed int, pixelSize int) {
 		speed:        speed,
 		audioContext: audio.NewContext(44100),
 		pgmData:      program,
+		fgColor:      fgC,
+		bgColor:      bgC,
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
@@ -83,18 +108,7 @@ func (e *chip8Emulator) Update() error {
 
 		// This advances the processor one tick/cycle
 		runtimeError := e.vm.Cycle()
-
-		// Handle runtime errors which are always fatal
-		if runtimeError != nil {
-			se, isSystemError := runtimeError.(chip8.SystemError)
-			code := 50 // Default code
-			if isSystemError {
-				code = se.Code()
-			}
-
-			log.Printf("Unrecoverable system error: %s", runtimeError.Error())
-			os.Exit(code)
-		}
+		checkErr(runtimeError)
 	}
 
 	return nil
@@ -127,7 +141,38 @@ func (e *chip8Emulator) Layout(outsideWidth, outsideHeight int) (screenWidth, sc
 	return outsideWidth, outsideHeight
 }
 
-func (e *chip8Emulator) Reset() {
+func (e *chip8Emulator) SoftReset() {
 	e.vm.Reset()
 	e.vm.LoadProgram(e.pgmData)
+}
+
+// Handle runtime errors which are always fatal
+func checkErr(err error) {
+	if err != nil {
+		se, isSystemError := err.(chip8.SystemError)
+		code := 50 // Default code
+		if isSystemError {
+			code = se.Code()
+		}
+
+		log.Printf("Unrecoverable system error: %s", err.Error())
+		os.Exit(code)
+	}
+}
+
+func parseHexColor(s string) (c color.RGBA, err error) {
+	c.A = 0xff
+	switch len(s) {
+	case 7:
+		_, err = fmt.Sscanf(s, "#%02x%02x%02x", &c.R, &c.G, &c.B)
+	case 4:
+		_, err = fmt.Sscanf(s, "#%1x%1x%1x", &c.R, &c.G, &c.B)
+		// Double the hex digits:
+		c.R *= 17
+		c.G *= 17
+		c.B *= 17
+	default:
+		err = fmt.Errorf("invalid length, must be 7 or 4")
+	}
+	return
 }

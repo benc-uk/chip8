@@ -6,9 +6,10 @@ What is CHIP-8? It's a simple 8-bit virtual machine developed in the 1970s, whic
 
 https://en.wikipedia.org/wiki/CHIP-8
 
-### Screenshot
-
-![](https://user-images.githubusercontent.com/14982936/120939826-ccd7d380-c711-11eb-93d9-69beb5eedb44.png)
+### Screenshots
+<img src="./docs/screens/astro.jpg" width="500">
+<img src="./docs/screens/rps.jpg" width="500">
+<img src="./docs/screens/blinky.jpg" width="500">
 
 Goals:
 
@@ -19,16 +20,14 @@ Goals:
 Use cases & key features:
 
 - WASM support, playable in browser as well as Linux and Windows binaries
-- Other stuff?
-- Joypad support?
+- Configurable speed
+- Builtin debugger
 
 Supporting technologies and libraries:
 
 - [Ebiten](https://github.com/hajimehoshi/ebiten) 
 
 ## Status
-
-### 🔥☢🔥 Highly experimental under extreme WIP!
 
 ![](https://img.shields.io/github/license/benc-uk/chip8)
 ![](https://img.shields.io/github/last-commit/benc-uk/chip8)
@@ -37,29 +36,45 @@ Supporting technologies and libraries:
 ![](https://img.shields.io/github/workflow/status/benc-uk/chip8/CI%20Build?label=ci-build)
 ![](https://img.shields.io/github/workflow/status/benc-uk/chip8/Release%20Binaries?label=release)
 
-
 # Getting Started
 
 ## Try web version
 
-EXPERIMENTAL: https://code.benco.io/chip8/web/
+Online WASM version is playable here with a small set of roms/programs provided
 
-## Installing
+https://code.benco.io/chip8/web/
+
+## Installing & Running
 
 Download from [releases](https://github.com/benc-uk/chip8/releases), unzip/untar and run :)
 
-## Running locally
+```
+chip8 <flags> <program-filename>
+
+  -debug
+        Enable debug, lots of output very slow
+  -scale int
+        Size of pixels, default results in a 640x320 window (default 10)
+  -speed int
+        Speed of the emulator in cycles per tick (default 12)
+  -bg-colour string
+        Colour of background (default "#000000")  
+  -fg-colour string
+        Colour of foreground pixels (default "#22DD22")              
+```
+
+## Developing & building locally
 
 Run `make build` and then `./bin/chip8`
 
 ```text
 $ make
-build                🔨 Run a local build without a container
+build                🔨 Run a local build
 help                 💬 This help message :)
 lint-fix             📝 Lint & format, will try to fix errors and modify code
 lint                 🔍 Lint & format, will not fix but sets exit code on error
 run                  🏃‍ Run application, used for local development
-test                 🤡 Run those sweet unit tests to give the illusion of testing
+test                 🤡 Run those unit tests and pretend you have no bugs
 ```
 
 # Repository Structure

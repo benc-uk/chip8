@@ -305,15 +305,22 @@ func (v *VM) clearRegisters() {
 	}
 }
 
-func (v *VM) LoadProgram(pgm []byte) {
+func (v *VM) LoadProgram(pgm []byte) error {
 	// Reset the machine before writing program data to memory
 	v.Reset()
 
+	if len(pgm)+ProgBase > memSize {
+		return SystemError{
+			reason: "Out of memory!",
+			code:   errorOutOfMemory,
+		}
+	}
 	for i := range pgm {
 		v.memory[ProgBase+i] = pgm[i]
 	}
 
 	console.Successf("Loaded %d bytes into memory OK\n", len(pgm))
+	return nil
 }
 
 func (v *VM) DisplayValueAt(x int, y int) uint8 {
