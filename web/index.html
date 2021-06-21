@@ -10,77 +10,62 @@
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.97em%22 font-size=%2280%22>📟</text></svg>"
     />
 
-    <script src="wasm_exec.js"></script>
+    <script src="js/main.js"></script>
 
-    <script>
-      async function createRunningEmulator() {
-        removeFrame();
-        emuFrame = createEmuFrame();
-        const pgmName = document.querySelector("#program").value;
-        emuFrame.setAttribute("data-pgm-name", "roms/" + pgmName);
-        emuFrame.setAttribute(
-          "data-speed",
-          document.querySelector("#speed").value
-        );
-        document.querySelector("#wrapper").appendChild(emuFrame);
-      }
-
-      async function createStoppedEmulator() {
-        removeFrame();
-        document.querySelector("#wrapper").appendChild(createEmuFrame());
-      }
-
-      function removeFrame() {
-        oldFrame = document.querySelector("#emulator");
-        if (oldFrame) {
-          document.querySelector("#wrapper").removeChild(oldFrame);
-        }
-      }
-
-      function createEmuFrame() {
-        var emuFrame = document.createElement("iframe");
-        emuFrame.src = "emulator.html";
-        emuFrame.id = "emulator";
-        emuFrame.width = 1000;
-        emuFrame.height = 500;
-        return emuFrame;
-      }
-    </script>
     <title>CHIP-8 ~ Go & WASM</title>
   </head>
   <body onload="createStoppedEmulator();">
-    <select id="program">
-      <option>ASTRODODGE</option>
+    <select id="program" onchange="createRunningEmulator()">
+      <option>ASTRO DODGE</option>
+      <option>BREAKOUT</option>
       <option>BRIX</option>
-      <option>GLITCHGHOST</option>
+      <option>GLITCH GHOST</option>
+      <option>HIDDEN</option>
       <option>INVADERS</option>
       <option>MERLIN</option>
       <option>OUTLAW</option>
+      <option>PONG 1</option>
+      <option>PONG 2</option>
       <option>RPS</option>
+      <option>RUSH HOUR</option>
       <option>SLIPPERYSLOPE</option>
       <option>SNAKE</option>
-      <option>SPACEJAM</option>
+      <option>SPACE JAM</option>
+      <option>SUBMARINE</option>
       <option>TANK</option>
       <option>TETRIS</option>
       <option>TICTAC</option>
+      <option>VBRIX</option>
     </select>
 
-    <button onclick="createRunningEmulator()">LOAD PROGRAM</button>
+    <button onclick="createRunningEmulator()">LOAD</button>
 
-    <button onclick="createStoppedEmulator()">REBOOT SYSTEM</button>
+    <button onclick="createStoppedEmulator()">RESET</button>
 
     SPEED:
     <select id="speed">
+      <option>1</option>
+      <option>5</option>
       <option>10</option>
       <option>20</option>
       <option selected>30</option>
       <option>40</option>
       <option>50</option>
       <option>60</option>
-      <option>70</option>
       <option>80</option>
-      <option>90</option>
       <option>100</option>
+    </select>
+
+    THEME:
+    <select id="theme">
+      <option value="#00ff00,#000000">GREEN</option>
+      <option value="#ffa200,#1c1201">AMBER</option>
+      <option value="#ffffff,#000000">WHITE</option>
+      <option value="#ff0000,#000000">RED</option>
+      <option value="#000000,#ffffff">INVERSE</option>
+      <option value="#ffff00,#000044">TZEENTCH</option>
+      <option value="#288035,#c8dbcb">GAMEBOY</option>
+      <option value="#07e3d1,#220342">SYNTHWAVE</option>
     </select>
 
     <footer>
@@ -94,8 +79,28 @@
     <div id="wrapper"></div>
 
     Controls:<br />
-    Note. Each game uses different keypad inputs, you will have to experiment,
-    but WASD is common for movement<br /><br />
-    <img src="img/keys.png" width="400px" style="padding-left: 3rem" />
+    Note. Each game uses different keypad inputs, sorry but you will have to
+    experiment, but WASD is common for movement<br /><br />
+    <table>
+      <tr>
+        <td>
+          <img src="img/keys.png" width="400px" style="padding-left: 3rem" />
+        </td>
+        <td>
+          <ul>
+            <li><b>F5</b> - Pause the system</li>
+            <li>
+              <b>F6</b> - When paused step through instructions (useful when
+              debug is enabled)
+            </li>
+            <li>
+              <b>F11</b> - Enable debugger, which will be output to stdout or
+              the browser console
+            </li>
+            <li><b>F12</b> - Reset system and reload the program</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

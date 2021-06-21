@@ -37,6 +37,10 @@ hr {
   border-bottom: 1px solid #2f8b2f;
 }
 
+#wrapper {
+  text-align: center;
+}
+
 iframe {
   border: 12px solid #000000;
   background-color: #000000;

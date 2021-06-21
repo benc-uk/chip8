@@ -22,7 +22,7 @@ const generalErrorCode = 1
 func main() {
 	log.Println("WASM emulator starting")
 
-	if len(os.Args) != 4 {
+	if len(os.Args) != 6 {
 		checkError(errors.New("wrong number of arguments"))
 	}
 
@@ -45,8 +45,12 @@ func main() {
 	checkError(err)
 	pixelSize, err := strconv.Atoi(os.Args[3])
 	checkError(err)
+	fg := os.Args[4]
+	checkError(err)
+	bg := os.Args[5]
+	checkError(err)
 
-	emulator.Start(body, debug, speed, pixelSize, "#00ff00", "#000000")
+	emulator.Start(body, debug, speed, pixelSize, fg, bg)
 }
 
 func checkError(err error) {

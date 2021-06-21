@@ -10,7 +10,7 @@ REPO_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 GOLINT_PATH := $(REPO_DIR)/bin/golangci-lint # Remove if not using Go
 GOOS ?= linux
 
-.PHONY: help run lint lint-fix
+.PHONY: help run lint lint-fix test run
 .DEFAULT_GOAL := help
 
 help: ## 💬 This help message :)
