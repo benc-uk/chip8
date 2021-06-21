@@ -17,7 +17,6 @@ import (
 	"github.com/benc-uk/chip8/pkg/emulator"
 )
 
-const loadErrorCode = 10
 const generalErrorCode = 1
 
 func main() {

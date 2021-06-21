@@ -57,18 +57,17 @@ type VM struct {
 	stack      []uint16
 
 	// Supporting fields for emulation. not part of the system architecture
-	running        bool
+	debug          bool
 	DisplayUpdated bool
 
 	// Keys that are currently pressed, values are 0x0 ~ 0xF
 	Keys []uint8
 }
 
-func NewVM(debug bool) *VM {
+func NewVM() *VM {
 	v := VM{}
 	console.Info("CHIP-8 system created...")
-	v.reset()
-	enableDebug = debug
+	v.Reset()
 
 	// Load font into lower memory
 	for i, fontByte := range font.GetFont() {
@@ -108,11 +107,8 @@ func (v *VM) Run(errors chan error, delay int) {
 
 // Cycle is the heart of the CHIP-8 emulator, running a single processor cycle
 func (v *VM) Cycle() error {
-	if !v.running {
-		return nil
-	}
 
-	debugf("============== PC: %02X ==================\n", v.pc)
+	v.debugLogf("============== PC: %02X ==================\n", v.pc)
 
 	// First get the 16 bit opcode at the current PC
 	opcodeRaw, err := v.fetch()
@@ -159,7 +155,7 @@ func (v *VM) fetch() (uint16, error) {
 	}
 
 	op := binary.BigEndian.Uint16(v.memory[v.pc : v.pc+2])
-	debugf("> FET >>> %04X\n", v.memory[v.pc:v.pc+2])
+	v.debugLogf("> FET >>> %04X\n", v.memory[v.pc:v.pc+2])
 
 	// VERY IMPORTANT! Move the PC to the next address in memory
 	v.pc = v.pc + 2
@@ -288,13 +284,13 @@ func (v *VM) execute(o Opcode) error {
 	return nil
 }
 
-func (v *VM) reset() {
+func (v *VM) Reset() {
 	console.Info("System was reset")
 	v.clearMemory()
 	v.clearRegisters()
+	v.insCLS()
 	v.index = 0
 	v.pc = ProgBase
-	v.running = true
 }
 
 func (v *VM) clearMemory() {
@@ -311,7 +307,7 @@ func (v *VM) clearRegisters() {
 
 func (v *VM) LoadProgram(pgm []byte) {
 	// Reset the machine before writing program data to memory
-	v.reset()
+	v.Reset()
 
 	for i := range pgm {
 		v.memory[ProgBase+i] = pgm[i]
@@ -334,4 +330,12 @@ func (v *VM) SetFlag(val uint8) {
 
 func (v *VM) GetSoundTimer() uint8 {
 	return v.soundTimer
+}
+
+func (v *VM) SetDebug(d bool) {
+	v.debug = d
+}
+
+func (v *VM) IsDebugging() bool {
+	return v.debug
 }

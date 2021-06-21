@@ -14,7 +14,7 @@
       "env": {
         "DISPLAY": "192.168.0.34:0"
       },
-      "args": ["-debug=false", "-slow=0", "-scale=3", "roms/ibm.ch8"]
+      "args": ["-debug=true", "-speed=1", "-scale=12", "roms/games/RPS.ch8"]
     }
   ]
 }

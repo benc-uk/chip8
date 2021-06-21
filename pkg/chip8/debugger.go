@@ -10,17 +10,12 @@ import (
 	"github.com/benc-uk/chip8/pkg/console"
 )
 
-var enableDebug = false
-
 func (o Opcode) dump() {
-	if !enableDebug {
-		return
-	}
 	console.Infof("> OPC >>> kind: %X, x: %X, y: %X, n:%X, nn:%X, nnn:%X\n", o.kind, o.x, o.y, o.n, o.nn, o.nnn)
 }
 
 func (v VM) dump() {
-	if !enableDebug {
+	if !v.debug {
 		return
 	}
 	console.Successf("> SYS >>> PC:%04X  I:%04X  DT:%02X  ST:%02X \n", v.pc, v.index, v.delayTimer, v.soundTimer)
@@ -43,7 +38,7 @@ func (v VM) dump() {
 }
 
 func (v *VM) DumpMemory(start int, end int) {
-	if !enableDebug {
+	if !v.debug {
 		return
 	}
 	for i := start; i < end; i++ {
@@ -51,15 +46,15 @@ func (v *VM) DumpMemory(start int, end int) {
 	}
 }
 
-func debug(s string) {
-	if !enableDebug {
+func (v *VM) debugLog(s string) {
+	if !v.debug {
 		return
 	}
 	console.Debug(s)
 }
 
-func debugf(f string, a ...interface{}) {
-	if !enableDebug {
+func (v *VM) debugLogf(f string, a ...interface{}) {
+	if !v.debug {
 		return
 	}
 	console.Debugf(f, a...)

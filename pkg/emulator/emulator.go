@@ -1,7 +1,6 @@
 package emulator
 
 import (
-	_ "embed"
 	"image/color"
 	"log"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"github.com/benc-uk/chip8/pkg/console"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 // Version is the emulator version
@@ -23,6 +24,8 @@ type chip8Emulator struct {
 	display   *ebiten.Image
 	pixelSize int
 	speed     int
+	paused    bool
+	pgmData   []byte
 
 	audioContext *audio.Context
 	bleeper      *audio.Player
@@ -36,7 +39,8 @@ func Start(program []byte, debug bool, speed int, pixelSize int) {
 	}
 
 	// Create a new CHIP-8 virtual machine, and load program into it
-	vm := chip8.NewVM(debug)
+	vm := chip8.NewVM()
+	vm.SetDebug(debug)
 	vm.LoadProgram(program)
 
 	// Wrap the VM in an chip8Emulator to allow us to use ebiten with it
@@ -46,6 +50,7 @@ func Start(program []byte, debug bool, speed int, pixelSize int) {
 		pixelSize:    pixelSize,
 		speed:        speed,
 		audioContext: audio.NewContext(44100),
+		pgmData:      program,
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
@@ -62,7 +67,7 @@ func Start(program []byte, debug bool, speed int, pixelSize int) {
 // Update is called every tick (1/60 [s] by default).
 func (e *chip8Emulator) Update() error {
 	// Read the keyboard
-	readKeyboard(e.vm)
+	e.readKeyboard()
 
 	// Play sound
 	e.playSound()
@@ -70,6 +75,12 @@ func (e *chip8Emulator) Update() error {
 	// Main emulator processor loop, we execute a number of CHIP-8 processor cycles
 	// Depending on the speed
 	for c := 0; c < e.speed; c++ {
+		// Handle pausing and stepping through code
+		if e.paused && !inpututil.IsKeyJustPressed(ebiten.KeyF6) {
+			c--
+			return nil
+		}
+
 		// This advances the processor one tick/cycle
 		runtimeError := e.vm.Cycle()
 
@@ -100,9 +111,23 @@ func (e *chip8Emulator) Draw(screen *ebiten.Image) {
 	opt.GeoM.Scale(float64(e.pixelSize), float64(e.pixelSize))
 	opt.Filter = ebiten.FilterNearest
 	screen.DrawImage(e.display, opt)
+
+	debugMsg := ""
+	if e.paused {
+		debugMsg = "PAUSED"
+	}
+	if e.vm.IsDebugging() {
+		debugMsg += "\nDEBUGGING"
+	}
+	ebitenutil.DebugPrint(screen, debugMsg)
 }
 
 // Layout can control scaling
 func (e *chip8Emulator) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
+}
+
+func (e *chip8Emulator) Reset() {
+	e.vm.Reset()
+	e.vm.LoadProgram(e.pgmData)
 }

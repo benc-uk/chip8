@@ -28,46 +28,57 @@ func (e *chip8Emulator) renderDisplay() {
 	}
 }
 
-func readKeyboard(v *chip8.VM) {
-	v.Keys = []uint8{}
+func (e *chip8Emulator) readKeyboard() {
+	// Emulator specific keys
+	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
+		e.paused = !e.paused
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
+		e.vm.SetDebug(!e.vm.IsDebugging())
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
+		e.Reset()
+	}
+
+	e.vm.Keys = []uint8{}
 	for _, keycode := range inpututil.PressedKeys() {
 		// This handles the "standard" mapping from PC keyboard to CHIP8 keypad num
 		switch keycode {
 		case ebiten.Key1:
-			v.Keys = append(v.Keys, 0x1)
+			e.vm.Keys = append(e.vm.Keys, 0x1)
 		case ebiten.Key2:
-			v.Keys = append(v.Keys, 0x2)
+			e.vm.Keys = append(e.vm.Keys, 0x2)
 		case ebiten.Key3:
-			v.Keys = append(v.Keys, 0x3)
+			e.vm.Keys = append(e.vm.Keys, 0x3)
 		case ebiten.Key4:
-			v.Keys = append(v.Keys, 0xC)
+			e.vm.Keys = append(e.vm.Keys, 0xC)
 
 		case ebiten.KeyQ:
-			v.Keys = append(v.Keys, 0x4)
+			e.vm.Keys = append(e.vm.Keys, 0x4)
 		case ebiten.KeyW:
-			v.Keys = append(v.Keys, 0x5)
+			e.vm.Keys = append(e.vm.Keys, 0x5)
 		case ebiten.KeyE:
-			v.Keys = append(v.Keys, 0x6)
+			e.vm.Keys = append(e.vm.Keys, 0x6)
 		case ebiten.KeyR:
-			v.Keys = append(v.Keys, 0xD)
+			e.vm.Keys = append(e.vm.Keys, 0xD)
 
 		case ebiten.KeyA:
-			v.Keys = append(v.Keys, 0x7)
+			e.vm.Keys = append(e.vm.Keys, 0x7)
 		case ebiten.KeyS:
-			v.Keys = append(v.Keys, 0x8)
+			e.vm.Keys = append(e.vm.Keys, 0x8)
 		case ebiten.KeyD:
-			v.Keys = append(v.Keys, 0x9)
+			e.vm.Keys = append(e.vm.Keys, 0x9)
 		case ebiten.KeyF:
-			v.Keys = append(v.Keys, 0xE)
+			e.vm.Keys = append(e.vm.Keys, 0xE)
 
 		case ebiten.KeyZ:
-			v.Keys = append(v.Keys, 0xA)
+			e.vm.Keys = append(e.vm.Keys, 0xA)
 		case ebiten.KeyX:
-			v.Keys = append(v.Keys, 0x0)
+			e.vm.Keys = append(e.vm.Keys, 0x0)
 		case ebiten.KeyC:
-			v.Keys = append(v.Keys, 0xB)
+			e.vm.Keys = append(e.vm.Keys, 0xB)
 		case ebiten.KeyV:
-			v.Keys = append(v.Keys, 0xF)
+			e.vm.Keys = append(e.vm.Keys, 0xF)
 		}
 	}
 }
