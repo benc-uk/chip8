@@ -34,6 +34,9 @@ jobs:
         with:
           go-version: "^1.16.4"
 
+      - name: Install dev packages
+        run: apt install xorg-dev libasound2-dev
+
       # Run tests
       - name: Run tests
         run: make test

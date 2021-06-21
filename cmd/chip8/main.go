@@ -24,11 +24,11 @@ const banner = `
  ╚═════╝  ╚═════╝      ╚═════╝╚═╝  ╚═╝╚═╝╚═╝            ╚════╝`
 
 func main() {
-	var debugFlag = flag.Bool("debug", false, "Enable debug, lots of output very slow")
+	var debugFlag = flag.Bool("debug", false, "Enable debug, lots of output & very slow")
 	var speedFlag = flag.Int("speed", 12, "Speed of the emulator in cycles per tick")
 	var scaleFlag = flag.Int("scale", 10, "Size of pixels, default results in a 640x320 window")
-	var fgFlag = flag.String("fg-colour", "#22DD22", "Colour of foreground pixels")
-	var bgFlag = flag.String("bg-colour", "#000000", "Colour of background")
+	var fgFlag = flag.String("fg-colour", "#22DD22", "Colour of foreground pixels in hex")
+	var bgFlag = flag.String("bg-colour", "#000000", "Colour of background in hex")
 	flag.Parse()
 
 	if len(flag.Args()) < 1 {
