@@ -117,7 +117,7 @@ func (v *VM) insSCRD(n byte) {
 			v.display[x][y] = v.display[x][y-n]
 		}
 	}
-	//wipe the last 4 pixels
+	// Wipe the remaining top n rows of pixels
 	for y = 0; y < n; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			v.display[x][y] = 0
@@ -129,11 +129,18 @@ func (v *VM) insSCRD(n byte) {
 // One param: nibble in x
 //
 
-// LD F, Vx - load addr of font sprite for value in Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
+// LD F, Vx - load addr of font sprite for value of Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
 func (v *VM) insLDf(reg uint8) {
 	// NOTE: Each font sprite is 5 bytes "high"
 	val := uint16(v.registers[reg]) * 5
 	v.index = FontBase + val
+}
+
+// LD SF, Vx - load addr of big/super font sprite for value of Vx into i (Super CHIP-8)
+func (v *VM) insLDSf(reg uint8) {
+	// NOTE: Each font sprite is 10 bytes "high"
+	val := uint16(v.registers[reg]) * 10
+	v.index = FontLargeBase + val
 }
 
 // ADD I, Vx - Add value in Vx to i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx1E

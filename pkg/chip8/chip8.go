@@ -15,11 +15,14 @@ import (
 	"github.com/benc-uk/chip8/pkg/font"
 )
 
+// ProgBase is where programs should be loaded into memory
+const ProgBase = 0x200
+
 // FontBase address where fonts are loaded
 const FontBase = 0x0050
 
-// ProgBase is where programs should be loaded into memory
-const ProgBase = 0x200
+// FontLargeBase is where the larger 10 byte fonts are stored
+const FontLargeBase = 0x0050 + 0x40 // 0x40 bytes is the size of the low res font
 
 // Normal CHIP-8 systems have 4KB of memory
 const memSize = 0x1000 // 4096 bytes
@@ -72,9 +75,12 @@ func NewVM() *VM {
 	console.Info("CHIP-8 system created...")
 	v.Reset()
 
-	// Load font into lower memory
+	// Load fonts into lower memory
 	for i, fontByte := range font.GetFont() {
 		v.memory[FontBase+i] = fontByte
+	}
+	for i, fontByte := range font.GetLargeFont() {
+		v.memory[FontLargeBase+i] = fontByte
 	}
 
 	// Start the timer loops for the VM
@@ -280,6 +286,8 @@ func (v *VM) execute(o Opcode) error {
 				v.insADDIx(o.x)
 			case 0x29:
 				v.insLDf(o.x)
+			case 0x30:
+				v.insLDSf(o.x)
 			case 0x33:
 				v.insLDBx(o.x)
 			case 0x55:
