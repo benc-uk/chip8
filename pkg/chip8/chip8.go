@@ -15,7 +15,7 @@ import (
 	"github.com/benc-uk/chip8/pkg/font"
 )
 
-// Where fonts are loaded
+// FontBase address where fonts are loaded
 const FontBase = 0x0050
 
 // ProgBase is where programs should be loaded into memory
@@ -24,11 +24,11 @@ const ProgBase = 0x200
 // Normal CHIP-8 systems have 4KB of memory
 const memSize = 0x1000 // 4096 bytes
 
-// DisplayHeight standard CHIP-8 display height
-const DisplayHeight = 32
+// DisplayHeight is Super CHIP-8 display height, note this is backwards compatible
+const DisplayHeight = 64
 
-// DisplayWidth standard CHIP-8 display width
-const DisplayWidth = 64
+// DisplayWidth is Super CHIP-8 display width, note this is backwards compatible
+const DisplayWidth = 128
 
 // Used for the timer loop to pause 1/60 second
 const sixtyHzMicroSecs = 16700
@@ -55,6 +55,9 @@ type VM struct {
 	soundTimer byte
 	display    [DisplayWidth][DisplayHeight]uint8
 	stack      []uint16
+
+	// Super CHIP-8 extensions
+	HighRes bool
 
 	// Supporting fields for emulation. not part of the system architecture
 	debug          bool
@@ -178,11 +181,27 @@ func (v *VM) execute(o Opcode) error {
 	switch o.kind {
 	case 0x0:
 		{
-			if o.nn == 0xE0 {
-				v.insCLS()
+			if o.y == 0xC {
+				v.insSCRD(o.n)
 			}
-			if o.nn == 0xEE {
+			switch o.nn {
+			case 0xE0:
+				v.insCLS()
+			case 0xEE:
 				v.insRET()
+			case 0xEF:
+				v.insLOW() // Super CHIP-8
+			case 0xFB:
+				v.insSCRR() // Super CHIP-8
+			case 0xFC:
+				v.insSCRL() // Super CHIP-8
+			case 0xFF:
+				v.insHIGH() // Super CHIP-8
+				// default:
+				// 	return SystemError{
+				// 		reason: fmt.Sprintf("Invalid opcode %+v", o),
+				// 		code:   errorBadOpcode,
+				// 	}
 			}
 		}
 	case 0x1:

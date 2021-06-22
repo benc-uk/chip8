@@ -39,6 +39,46 @@ func (v *VM) insRET() {
 	v.pc = stackAddr
 }
 
+// HIGH - Enable hires (Super CHIP-8)
+func (v *VM) insHIGH() {
+	v.HighRes = true
+}
+
+// LOW - Disable hires (Super CHIP-8)
+func (v *VM) insLOW() {
+	v.HighRes = false
+}
+
+// LOW - Scroll right (Super CHIP-8)
+func (v *VM) insSCRR() {
+	for y := 0; y < DisplayHeight; y++ {
+		var x int
+		for x = DisplayWidth - 1; x >= 4; x-- {
+			v.display[x-4][y] = v.display[x][y]
+		}
+		// wipe the last 4 pixels
+		v.display[x][y] = 0
+		v.display[x-1][y] = 0
+		v.display[x-2][y] = 0
+		v.display[x-3][y] = 0
+	}
+}
+
+// SCRL - Scroll left (Super CHIP-8)
+func (v *VM) insSCRL() {
+	for y := 0; y < DisplayHeight; y++ {
+		var x int
+		for x = 0; x < DisplayWidth-4; x++ {
+			v.display[x][y] = v.display[x+4][y]
+		}
+		// wipe the last 4 pixels
+		v.display[x][y] = 0
+		v.display[x+1][y] = 0
+		v.display[x+2][y] = 0
+		v.display[x+3][y] = 0
+	}
+}
+
 //
 // One param: 12-bits in nnn
 //
@@ -62,6 +102,27 @@ func (v *VM) insCALL(addr uint16) {
 // JP V0, addr - jump to addr nnn +V0 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Bnnn
 func (v *VM) insJPV0(addr uint16) {
 	v.pc = addr + uint16(v.registers[0])
+}
+
+//
+// One param: nibble in n
+//
+
+// SCRD n - Scroll down n pixels (Super CHIP-8)
+func (v *VM) insSCRD(n byte) {
+	var y uint8
+	for y = DisplayHeight - 1; y >= n; y-- {
+		for x := 0; x < DisplayWidth; x++ {
+
+			v.display[x][y] = v.display[x][y-n]
+		}
+	}
+	//wipe the last 4 pixels
+	for y = 0; y < n; y++ {
+		for x := 0; x < DisplayWidth; x++ {
+			v.display[x][y] = 0
+		}
+	}
 }
 
 //
@@ -165,31 +226,31 @@ func (v *VM) insLDxK(reg uint8) {
 //
 
 // LD Vx, byte - load byte nn into register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#6xkk
-func (v *VM) insLDvb(reg uint8, byteData uint8) {
+func (v *VM) insLDvb(reg, byteData uint8) {
 	v.registers[reg] = byteData
 }
 
 // ADD Vx, byte - add byte nn to value in register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#7xkk
-func (v *VM) insADDvb(reg uint8, byteData uint8) {
+func (v *VM) insADDvb(reg, byteData uint8) {
 	v.registers[reg] = v.registers[reg] + byteData
 }
 
 // SE Vx, byte - if byte nn == value in register Vx, advance pc - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk
-func (v *VM) insSEvb(reg uint8, byteData uint8) {
+func (v *VM) insSEvb(reg, byteData uint8) {
 	if v.registers[reg] == byteData {
 		v.pc += 2
 	}
 }
 
 // SNE Vx, byte - if byte nn != value in register Vx, advance pc - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk
-func (v *VM) insSNEvb(reg uint8, byteData uint8) {
+func (v *VM) insSNEvb(reg, byteData uint8) {
 	if v.registers[reg] != byteData {
 		v.pc += 2
 	}
 }
 
 // RND Vx, byte - random value AND'ed with byte nn store in Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Cxkk
-func (v *VM) insRNDvb(reg uint8, byteData uint8) {
+func (v *VM) insRNDvb(reg, byteData uint8) {
 	r := uint8(rand.Intn(256))
 	v.registers[reg] = r & byteData
 }
@@ -199,34 +260,34 @@ func (v *VM) insRNDvb(reg uint8, byteData uint8) {
 //
 
 // SE Vx, Vy - skip and inc PC if Vx == Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#5xy0
-func (v *VM) insSExy(regx uint8, regy uint8) {
+func (v *VM) insSExy(regx, regy uint8) {
 	if v.registers[regx] == v.registers[regy] {
 		v.pc += 2
 	}
 }
 
 // LD Vx, Vy - place value of Vy into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy0
-func (v *VM) insLDxy(regx uint8, regy uint8) {
+func (v *VM) insLDxy(regx, regy uint8) {
 	v.registers[regx] = v.registers[regy]
 }
 
 // OR Vx, Vy - bitwise OR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy1
-func (v *VM) insORxy(regx uint8, regy uint8) {
+func (v *VM) insORxy(regx, regy uint8) {
 	v.registers[regx] |= v.registers[regy]
 }
 
 // AND Vx, Vy - bitwise OR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy2
-func (v *VM) insANDxy(regx uint8, regy uint8) {
+func (v *VM) insANDxy(regx, regy uint8) {
 	v.registers[regx] &= v.registers[regy]
 }
 
 // XOR Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy3
-func (v *VM) insXORxy(regx uint8, regy uint8) {
+func (v *VM) insXORxy(regx, regy uint8) {
 	v.registers[regx] ^= v.registers[regy]
 }
 
 // ADD Vx, Vy - Add Vx and Vy, store result into Vx. SETS VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy4
-func (v *VM) insADDxy(regx uint8, regy uint8) {
+func (v *VM) insADDxy(regx, regy uint8) {
 	regxPrev := v.registers[regx]
 	v.registers[regx] = v.registers[regx] + v.registers[regy]
 	if v.registers[regx] < regxPrev {
@@ -237,7 +298,7 @@ func (v *VM) insADDxy(regx uint8, regy uint8) {
 }
 
 // SUB Vx, Vy - Sub Vy from Vx, store result into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
-func (v *VM) insSUBxy(regx uint8, regy uint8) {
+func (v *VM) insSUBxy(regx, regy uint8) {
 	if v.registers[regx] > v.registers[regy] {
 		v.SetFlag(1)
 	} else {
@@ -247,7 +308,7 @@ func (v *VM) insSUBxy(regx uint8, regy uint8) {
 }
 
 // SHR Vx - bit 0 of Vx into VF, shift Vx to divide by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy6
-func (v *VM) insSHRxy(regx uint8, regy uint8) {
+func (v *VM) insSHRxy(regx, regy uint8) {
 	v.registers[0xF] = v.registers[regx] & 1
 	v.registers[regx] >>= 1
 	// v.registers[0xF] = v.registers[regy] & 0x1
@@ -255,7 +316,7 @@ func (v *VM) insSHRxy(regx uint8, regy uint8) {
 }
 
 // SUBN Vx, Vy - Sub Vx from Vy into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
-func (v *VM) insSUBNxy(regx uint8, regy uint8) {
+func (v *VM) insSUBNxy(regx, regy uint8) {
 	// IMPORTANT: overflow when greater OR equal
 	if v.registers[regy] >= v.registers[regx] {
 		v.SetFlag(1)
@@ -266,13 +327,13 @@ func (v *VM) insSUBNxy(regx uint8, regy uint8) {
 }
 
 // SHL Vx, Vy - Most sig bit of Vx into VF, shift Vx left to mult by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE
-func (v *VM) insSHLxy(regx uint8, regy uint8) {
+func (v *VM) insSHLxy(regx, regy uint8) {
 	v.registers[0xF] = v.registers[regx] >> 7
 	v.registers[regx] <<= 1
 }
 
 // SHL Vx, Vy - Skip PC if Vx != Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#9xy0
-func (v *VM) insSNExy(regx uint8, regy uint8) {
+func (v *VM) insSNExy(regx, regy uint8) {
 	if v.registers[regx] != v.registers[regy] {
 		v.pc += 2
 	}
@@ -283,12 +344,18 @@ func (v *VM) insSNExy(regx uint8, regy uint8) {
 //
 
 // DRW Vx, Vy, nibble - Draw sprite located at i for n bytes at x, y - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Dxyn
-func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
+func (v *VM) insDRW(reg1, reg2, height uint8) {
 	x := v.registers[reg1] % DisplayWidth
 	y := v.registers[reg2] % DisplayHeight
 	v.SetFlag(0)
 
-	var row byte
+	if height == 0 && v.HighRes {
+		draw16Sprite(x, y)
+		v.DisplayUpdated = true
+		return
+	}
+
+	var row uint8
 	for row = 0; row < height; row++ {
 		if y+row >= DisplayHeight {
 			return
@@ -303,12 +370,13 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 			spriteBit := (spriteByte >> (7 - xbit)) & 1
 			// Get bit from display
 			displayBit := v.display[x+xbit][y+row]
+
 			// XOR logic and setting of VF
 			if spriteBit == 1 && displayBit == 1 {
 				v.SetFlag(1)
 				v.display[x+xbit][y+row] = 0
 			}
-			//if spriteBit == 1 && displayBit != 1 {
+
 			if spriteBit != displayBit {
 				v.display[x+xbit][y+row] = 1
 			}
@@ -317,4 +385,14 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 	}
 
 	v.DisplayUpdated = true
+}
+
+func draw16Sprite(x, y byte) {
+	var row byte
+	for row = 0; row < 16; row++ {
+		if y+row >= DisplayHeight {
+			return
+		}
+
+	}
 }
