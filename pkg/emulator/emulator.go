@@ -7,6 +7,7 @@
 package emulator
 
 import (
+	"crypto/md5"
 	"fmt"
 	"image/color"
 	"log"
@@ -37,6 +38,7 @@ type chip8Emulator struct {
 	fgColor   color.RGBA
 	bgColor   color.RGBA
 	showSpeed int
+	colourMap ColourMap
 
 	audioContext *audio.Context
 	bleeper      *audio.Player
@@ -89,12 +91,15 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 		fgColor:      fgC,
 		bgColor:      bgC,
 		showSpeed:    0,
+		colourMap:    GetColourMap(md5.Sum(program)),
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
 	ebiten.SetWindowTitle("Go CHIP-8 v" + Version)
 	//ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	ebiten.SetVsyncEnabled(false)
+
+	console.Successf("Program MD5: %X\n", md5.Sum(program))
 
 	console.Successf("Starting CHIP-8 system, processor at address 0x%04X\n", 0x200)
 	if err := ebiten.RunGame(emu); err != nil {

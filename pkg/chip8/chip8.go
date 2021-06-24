@@ -56,7 +56,7 @@ type VM struct {
 	index      uint16
 	delayTimer byte
 	soundTimer byte
-	display    [DisplayWidth][DisplayHeight]uint8
+	display    [DisplayWidth][DisplayHeight]uint16
 	stack      []uint16
 
 	// Super CHIP-8 extensions
@@ -339,7 +339,7 @@ func (v *VM) LoadProgram(pgm []byte) error {
 	return nil
 }
 
-func (v *VM) DisplayValueAt(x int, y int) uint8 {
+func (v *VM) DisplayValueAt(x int, y int) uint16 {
 	return v.display[x][y]
 }
 

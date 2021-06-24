@@ -339,13 +339,13 @@ func (v *VM) insDRW(reg1, reg2, height uint8) {
 			displayBit := v.display[x+xbit][y+row]
 
 			// XOR logic and setting of VF
-			if spriteBit == 1 && displayBit == 1 {
+			if spriteBit == 1 && displayBit > 0 {
 				v.SetFlag(1)
 				v.display[x+xbit][y+row] = 0
 			}
 
-			if spriteBit != displayBit {
-				v.display[x+xbit][y+row] = 1
+			if spriteBit == 1 && displayBit == 0 {
+				v.display[x+xbit][y+row] = v.index
 			}
 		}
 	}

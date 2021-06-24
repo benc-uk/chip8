@@ -16,19 +16,36 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
+var indexmap = map[int]bool{}
+
 func (e *chip8Emulator) renderDisplay() {
 	e.display.Fill(e.bgColor)
 
 	for y := 0; y < chip8.DisplayHeight; y++ {
 		for x := 0; x < chip8.DisplayWidth; x++ {
-			if e.vm.DisplayValueAt(x, y) == 1 {
+			pixelValue := e.vm.DisplayValueAt(x, y)
+			if !indexmap[int(pixelValue)] {
+				//console.Errorf("color: %04X\n", pixelValue)
+				indexmap[int(pixelValue)] = true
+			}
+
+			// Default colour
+			pixelColour := e.fgColor
+			// Try to find a colour from the map if it exists
+			if e.colourMap != nil {
+				if newColour := e.colourMap.getColour(int(pixelValue)); newColour != nil {
+					pixelColour = *newColour
+				}
+			}
+
+			if pixelValue > 0 {
 				if !e.vm.HighRes {
-					e.display.Set(x*2, y*2, e.fgColor)
-					e.display.Set(x*2+1, y*2, e.fgColor)
-					e.display.Set(x*2, y*2+1, e.fgColor)
-					e.display.Set(x*2+1, y*2+1, e.fgColor)
+					e.display.Set(x*2, y*2, pixelColour)
+					e.display.Set(x*2+1, y*2, pixelColour)
+					e.display.Set(x*2, y*2+1, pixelColour)
+					e.display.Set(x*2+1, y*2+1, pixelColour)
 				} else {
-					e.display.Set(x, y, e.fgColor)
+					e.display.Set(x, y, pixelColour)
 				}
 			}
 		}

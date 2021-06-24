@@ -108,13 +108,13 @@ func (v *VM) draw16Sprite(x, y byte) {
 			displayBit := v.display[x+bitIndex][y+row]
 
 			// XOR logic and setting of VF
-			if spriteBit == 1 && displayBit == 1 {
+			if spriteBit == 1 && displayBit > 0 {
 				v.SetFlag(1)
 				v.display[x+bitIndex][y+row] = 0
 				continue
 			}
 
-			if spriteBit != displayBit {
+			if spriteBit == 1 && displayBit == 0 {
 				v.display[x+bitIndex][y+row] = 1
 			}
 		}
