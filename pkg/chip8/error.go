@@ -10,6 +10,7 @@ const errorCodeOther = 50
 const errorCodeAddress = 51
 const errorBadOpcode = 52
 const errorOutOfMemory = 53
+const errorExit = 54
 
 type SystemError struct {
 	code   int

@@ -1,5 +1,4 @@
-// Size for CHIP8 not Super-CHIP8
-const CHIP8_DISPLAY_WIDTH = 64;
+const CHIP8_DISPLAY_WIDTH = 128;
 const VERSION = "1.0.0";
 
 // NOTE. We get our params from the iframe data attributes, hey it's not elegant but it works
@@ -34,6 +33,7 @@ function bodyLoaded() {
     +++ Version ${VERSION}
     +++ Enabling WASM data & protocol sync buffers
     +++ Mem check ~ 4096 bytes: OK
+    +++ Super video mode: 128 x 64 pixels
     +++ System cold boot completed with 0 warnings
       > █`;
     pre.setAttribute("unselectable", "on");

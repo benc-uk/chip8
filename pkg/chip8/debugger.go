@@ -14,10 +14,7 @@ func (o Opcode) dump() {
 	console.Infof("> OPC >>> kind: %X, x: %X, y: %X, n:%X, nn:%X, nnn:%X\n", o.kind, o.x, o.y, o.n, o.nn, o.nnn)
 }
 
-func (v VM) dump() {
-	if !v.debug {
-		return
-	}
+func (v VM) Dump() {
 	console.Successf("> SYS >>> PC:%04X  I:%04X  DT:%02X  ST:%02X \n", v.pc, v.index, v.delayTimer, v.soundTimer)
 
 	// Dump registers
@@ -38,9 +35,6 @@ func (v VM) dump() {
 }
 
 func (v *VM) DumpMemory(start int, end int) {
-	if !v.debug {
-		return
-	}
 	for i := start; i < end; i++ {
 		console.Warningf("%04X: %02X\n", i, v.memory[i])
 	}

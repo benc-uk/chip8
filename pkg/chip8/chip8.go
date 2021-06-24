@@ -15,20 +15,23 @@ import (
 	"github.com/benc-uk/chip8/pkg/font"
 )
 
-// Where fonts are loaded
-const FontBase = 0x0050
-
 // ProgBase is where programs should be loaded into memory
 const ProgBase = 0x200
+
+// FontBase address where fonts are loaded
+const FontBase = 0x0050
+
+// FontLargeBase is where the larger 10 byte fonts are stored
+const FontLargeBase = 0x0050 + 0x40 // 0x40 bytes is the size of the low res font
 
 // Normal CHIP-8 systems have 4KB of memory
 const memSize = 0x1000 // 4096 bytes
 
-// DisplayHeight standard CHIP-8 display height
-const DisplayHeight = 32
+// DisplayHeight is Super CHIP-8 display height, note this is backwards compatible
+const DisplayHeight = 64
 
-// DisplayWidth standard CHIP-8 display width
-const DisplayWidth = 64
+// DisplayWidth is Super CHIP-8 display width, note this is backwards compatible
+const DisplayWidth = 128
 
 // Used for the timer loop to pause 1/60 second
 const sixtyHzMicroSecs = 16700
@@ -56,23 +59,33 @@ type VM struct {
 	display    [DisplayWidth][DisplayHeight]uint8
 	stack      []uint16
 
+	// Super CHIP-8 extensions
+	HighRes bool
+
 	// Supporting fields for emulation. not part of the system architecture
 	debug          bool
 	DisplayUpdated bool
-
+	// Flag for quirks e.g instructions F
+	modernMode bool
 	// Keys that are currently pressed, values are 0x0 ~ 0xF
 	Keys []uint8
 }
 
-func NewVM() *VM {
+func NewVM(modernMode bool) *VM {
 	v := VM{}
 	console.Info("CHIP-8 system created...")
 	v.Reset()
 
-	// Load font into lower memory
+	// Load fonts into lower memory
 	for i, fontByte := range font.GetFont() {
 		v.memory[FontBase+i] = fontByte
 	}
+	for i, fontByte := range font.GetLargeFont() {
+		v.memory[FontLargeBase+i] = fontByte
+	}
+
+	// Default to modern / quirks mode
+	v.modernMode = modernMode
 
 	// Start the timer loops for the VM
 	go v.TimerLoop()
@@ -80,34 +93,8 @@ func NewVM() *VM {
 	return &v
 }
 
-// Run the VM processor with a channel for reporting errors
-func (v *VM) Run(errors chan error, delay int) {
-	// Start delay timer loop in separate goroutine
-	go v.TimerLoop()
-
-	tick := 0
-	// Infinite loop, executing processor cycles
-	for {
-		if tick%900000 == 0 {
-			tick = 0
-			err := v.Cycle()
-
-			// Any errors from the processor cycle, pass to the channel to notify listeners
-			if err != nil {
-				errors <- err
-				// Halt the processor
-				return
-			}
-		}
-		tick++
-		// Delay to slow down the processor
-		//time.Sleep(time.Duration(1) * time.Nanosecond)
-	}
-}
-
 // Cycle is the heart of the CHIP-8 emulator, running a single processor cycle
 func (v *VM) Cycle() error {
-
 	v.debugLogf("============== PC: %02X ==================\n", v.pc)
 
 	// First get the 16 bit opcode at the current PC
@@ -127,7 +114,9 @@ func (v *VM) Cycle() error {
 	}
 
 	// Debug VM system state, PC, index, registers, stack etc
-	v.dump()
+	if v.debug {
+		v.Dump()
+	}
 
 	return nil
 }
@@ -178,11 +167,30 @@ func (v *VM) execute(o Opcode) error {
 	switch o.kind {
 	case 0x0:
 		{
-			if o.nn == 0xE0 {
-				v.insCLS()
+			if o.y == 0xC {
+				v.insSCRD(o.n) // Super CHIP-8
+				return nil
 			}
-			if o.nn == 0xEE {
+			switch o.nn {
+			case 0xE0:
+				v.insCLS()
+			case 0xEE:
 				v.insRET()
+			case 0xEF:
+				v.insLOW() // Super CHIP-8
+			case 0xFB:
+				v.insSCRR() // Super CHIP-8
+			case 0xFC:
+				v.insSCRL() // Super CHIP-8
+			case 0xFD:
+				v.insEXIT() // Super CHIP-8
+			case 0xFF:
+				v.insHIGH() // Super CHIP-8
+			default:
+				return SystemError{
+					reason: fmt.Sprintf("Invalid opcode %+v", o),
+					code:   errorBadOpcode,
+				}
 			}
 		}
 	case 0x1:
@@ -261,12 +269,20 @@ func (v *VM) execute(o Opcode) error {
 				v.insADDIx(o.x)
 			case 0x29:
 				v.insLDf(o.x)
+			case 0x30:
+				v.insLDSf(o.x)
 			case 0x33:
 				v.insLDBx(o.x)
 			case 0x55:
 				v.insLDIx(o.x)
 			case 0x65:
 				v.insLDxI(o.x)
+			case 0x75:
+				console.Error("F075 unsupported")
+				return nil
+			case 0x85:
+				console.Error("F085 unsupported")
+				return nil
 			default:
 				return SystemError{
 					reason: fmt.Sprintf("Invalid opcode %+v", o),

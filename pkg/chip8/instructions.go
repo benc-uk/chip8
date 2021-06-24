@@ -1,5 +1,5 @@
 //
-// CHIP-8 - Implementation of opcodes / instructions here
+// CHIP-8 - Implementation of opcodes / instructions
 // Ben C, June 2021
 // Notes:
 
@@ -23,7 +23,6 @@ func (v *VM) insCLS() {
 		}
 	}
 	v.DisplayUpdated = true
-
 }
 
 // RET - Return - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00EE
@@ -68,7 +67,7 @@ func (v *VM) insJPV0(addr uint16) {
 // One param: nibble in x
 //
 
-// LD F, Vx - load addr of font sprite for value in Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
+// LD F, Vx - load addr of font sprite for value of Vx into i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx29
 func (v *VM) insLDf(reg uint8) {
 	// NOTE: Each font sprite is 5 bytes "high"
 	val := uint16(v.registers[reg]) * 5
@@ -78,6 +77,11 @@ func (v *VM) insLDf(reg uint8) {
 // ADD I, Vx - Add value in Vx to i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx1E
 func (v *VM) insADDIx(reg uint8) {
 	v.index += uint16(v.registers[reg])
+	if v.index >= memSize {
+		v.SetFlag(1)
+	} else {
+		v.SetFlag(0)
+	}
 }
 
 // SKP Vx - Skip if key with val Vx is held - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Ex9E
@@ -127,6 +131,7 @@ func (v *VM) insLDBx(reg uint8) {
 }
 
 // LD [I], Vx - store reg V0 through Vx into mem i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx55
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
 func (v *VM) insLDIx(reg uint8) {
 	for ix := uint16(0); ix <= uint16(reg); ix++ {
 		addr := v.index + ix
@@ -135,9 +140,16 @@ func (v *VM) insLDIx(reg uint8) {
 		}
 		v.memory[addr] = v.registers[ix]
 	}
+
+	// handle quirks, where index is NOT incremented
+	if v.modernMode {
+		return
+	}
+	v.index += uint16(reg)
 }
 
 // LD Vx, [I] - load reg V0 through Vx from mem i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx65
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
 func (v *VM) insLDxI(reg uint8) {
 	for ix := uint16(0); ix <= uint16(reg); ix++ {
 		if v.index+ix >= memSize {
@@ -145,6 +157,12 @@ func (v *VM) insLDxI(reg uint8) {
 		}
 		v.registers[ix] = v.memory[v.index+ix]
 	}
+
+	// handle quirks, where index is NOT incremented
+	if v.modernMode {
+		return
+	}
+	v.index += uint16(reg)
 }
 
 // LD Vx, K - Wait for any key in Vx to be pressed - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx0A
@@ -165,31 +183,31 @@ func (v *VM) insLDxK(reg uint8) {
 //
 
 // LD Vx, byte - load byte nn into register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#6xkk
-func (v *VM) insLDvb(reg uint8, byteData uint8) {
+func (v *VM) insLDvb(reg, byteData uint8) {
 	v.registers[reg] = byteData
 }
 
 // ADD Vx, byte - add byte nn to value in register Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#7xkk
-func (v *VM) insADDvb(reg uint8, byteData uint8) {
+func (v *VM) insADDvb(reg, byteData uint8) {
 	v.registers[reg] = v.registers[reg] + byteData
 }
 
 // SE Vx, byte - if byte nn == value in register Vx, advance pc - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk
-func (v *VM) insSEvb(reg uint8, byteData uint8) {
+func (v *VM) insSEvb(reg, byteData uint8) {
 	if v.registers[reg] == byteData {
 		v.pc += 2
 	}
 }
 
 // SNE Vx, byte - if byte nn != value in register Vx, advance pc - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#3xkk
-func (v *VM) insSNEvb(reg uint8, byteData uint8) {
+func (v *VM) insSNEvb(reg, byteData uint8) {
 	if v.registers[reg] != byteData {
 		v.pc += 2
 	}
 }
 
 // RND Vx, byte - random value AND'ed with byte nn store in Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Cxkk
-func (v *VM) insRNDvb(reg uint8, byteData uint8) {
+func (v *VM) insRNDvb(reg, byteData uint8) {
 	r := uint8(rand.Intn(256))
 	v.registers[reg] = r & byteData
 }
@@ -199,37 +217,37 @@ func (v *VM) insRNDvb(reg uint8, byteData uint8) {
 //
 
 // SE Vx, Vy - skip and inc PC if Vx == Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#5xy0
-func (v *VM) insSExy(regx uint8, regy uint8) {
+func (v *VM) insSExy(regx, regy uint8) {
 	if v.registers[regx] == v.registers[regy] {
 		v.pc += 2
 	}
 }
 
 // LD Vx, Vy - place value of Vy into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy0
-func (v *VM) insLDxy(regx uint8, regy uint8) {
+func (v *VM) insLDxy(regx, regy uint8) {
 	v.registers[regx] = v.registers[regy]
 }
 
 // OR Vx, Vy - bitwise OR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy1
-func (v *VM) insORxy(regx uint8, regy uint8) {
+func (v *VM) insORxy(regx, regy uint8) {
 	v.registers[regx] |= v.registers[regy]
 }
 
 // AND Vx, Vy - bitwise OR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy2
-func (v *VM) insANDxy(regx uint8, regy uint8) {
+func (v *VM) insANDxy(regx, regy uint8) {
 	v.registers[regx] &= v.registers[regy]
 }
 
 // XOR Vx, Vy - bitwise XOR Vx and Vy, store result into Vx - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy3
-func (v *VM) insXORxy(regx uint8, regy uint8) {
+func (v *VM) insXORxy(regx, regy uint8) {
 	v.registers[regx] ^= v.registers[regy]
 }
 
 // ADD Vx, Vy - Add Vx and Vy, store result into Vx. SETS VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy4
-func (v *VM) insADDxy(regx uint8, regy uint8) {
+func (v *VM) insADDxy(regx, regy uint8) {
 	regxPrev := v.registers[regx]
 	v.registers[regx] = v.registers[regx] + v.registers[regy]
-	if v.registers[regx] < regxPrev {
+	if v.registers[regx] <= regxPrev {
 		v.SetFlag(1)
 	} else {
 		v.SetFlag(0)
@@ -237,8 +255,8 @@ func (v *VM) insADDxy(regx uint8, regy uint8) {
 }
 
 // SUB Vx, Vy - Sub Vy from Vx, store result into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
-func (v *VM) insSUBxy(regx uint8, regy uint8) {
-	if v.registers[regx] > v.registers[regy] {
+func (v *VM) insSUBxy(regx, regy uint8) {
+	if v.registers[regx] >= v.registers[regy] {
 		v.SetFlag(1)
 	} else {
 		v.SetFlag(0)
@@ -247,15 +265,19 @@ func (v *VM) insSUBxy(regx uint8, regy uint8) {
 }
 
 // SHR Vx - bit 0 of Vx into VF, shift Vx to divide by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy6
-func (v *VM) insSHRxy(regx uint8, regy uint8) {
-	v.registers[0xF] = v.registers[regx] & 1
-	v.registers[regx] >>= 1
-	// v.registers[0xF] = v.registers[regy] & 0x1
-	// v.registers[regx] = v.registers[regy] >> 1
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
+func (v *VM) insSHRxy(regx, regy uint8) {
+	if v.modernMode {
+		v.SetFlag(v.registers[regx] & 1)
+		v.registers[regx] >>= 1
+	} else {
+		v.SetFlag(v.registers[regy] & 1)
+		v.registers[regx] = (v.registers[regy] >> 1)
+	}
 }
 
 // SUBN Vx, Vy - Sub Vx from Vy into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
-func (v *VM) insSUBNxy(regx uint8, regy uint8) {
+func (v *VM) insSUBNxy(regx, regy uint8) {
 	// IMPORTANT: overflow when greater OR equal
 	if v.registers[regy] >= v.registers[regx] {
 		v.SetFlag(1)
@@ -266,13 +288,19 @@ func (v *VM) insSUBNxy(regx uint8, regy uint8) {
 }
 
 // SHL Vx, Vy - Most sig bit of Vx into VF, shift Vx left to mult by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE
-func (v *VM) insSHLxy(regx uint8, regy uint8) {
-	v.registers[0xF] = v.registers[regx] >> 7
-	v.registers[regx] <<= 1
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
+func (v *VM) insSHLxy(regx, regy uint8) {
+	if v.modernMode {
+		v.SetFlag(v.registers[regx] >> 7)
+		v.registers[regx] <<= 1
+	} else {
+		v.SetFlag(v.registers[regy] >> 7)
+		v.registers[regx] = (v.registers[regy] << 1)
+	}
 }
 
 // SHL Vx, Vy - Skip PC if Vx != Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#9xy0
-func (v *VM) insSNExy(regx uint8, regy uint8) {
+func (v *VM) insSNExy(regx, regy uint8) {
 	if v.registers[regx] != v.registers[regy] {
 		v.pc += 2
 	}
@@ -283,12 +311,18 @@ func (v *VM) insSNExy(regx uint8, regy uint8) {
 //
 
 // DRW Vx, Vy, nibble - Draw sprite located at i for n bytes at x, y - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Dxyn
-func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
+func (v *VM) insDRW(reg1, reg2, height uint8) {
 	x := v.registers[reg1] % DisplayWidth
 	y := v.registers[reg2] % DisplayHeight
 	v.SetFlag(0)
+	v.DisplayUpdated = true
 
-	var row byte
+	if height == 0 && v.HighRes {
+		v.draw16Sprite(x, y)
+		return
+	}
+
+	var row uint8
 	for row = 0; row < height; row++ {
 		if y+row >= DisplayHeight {
 			return
@@ -303,18 +337,16 @@ func (v *VM) insDRW(reg1 uint8, reg2 uint8, height uint8) {
 			spriteBit := (spriteByte >> (7 - xbit)) & 1
 			// Get bit from display
 			displayBit := v.display[x+xbit][y+row]
+
 			// XOR logic and setting of VF
 			if spriteBit == 1 && displayBit == 1 {
 				v.SetFlag(1)
 				v.display[x+xbit][y+row] = 0
 			}
-			//if spriteBit == 1 && displayBit != 1 {
+
 			if spriteBit != displayBit {
 				v.display[x+xbit][y+row] = 1
 			}
-
 		}
 	}
-
-	v.DisplayUpdated = true
 }

@@ -56,15 +56,26 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 		log.Fatalln("Pixel size must be be between 1 and 60")
 	}
 	fgC, err := parseHexColor(fgColor)
-	checkErr(err)
+	if err != nil {
+		fmt.Printf("Colour error: %s\n", err)
+		os.Exit(1)
+	}
 	bgC, err := parseHexColor(bgColor)
-	checkErr(err)
+	if err != nil {
+		fmt.Printf("Colour error: %s\n", err)
+		os.Exit(1)
+	}
 
 	// Create a new CHIP-8 virtual machine, and load program into it
-	vm := chip8.NewVM()
+	vm := chip8.NewVM(true)
 	vm.SetDebug(debug)
+
+	// Load supplied data as a program
 	err = vm.LoadProgram(program)
-	checkErr(err)
+	if err != nil {
+		fmt.Printf("R Tape loading error: %s\n", err)
+		os.Exit(1)
+	}
 
 	// Wrap the VM in an chip8Emulator to allow us to use ebiten with it
 	emu := &chip8Emulator{
@@ -100,7 +111,7 @@ func (e *chip8Emulator) Update() error {
 	// Main emulator processor loop, we execute a number of CHIP-8 processor cycles
 	// Depending on the speed
 	for c := 0; c < e.speed; c++ {
-		// Handle pausing and stepping through code
+		// Handle pausing and stepping through code, kinda funky but it works
 		if e.paused && !inpututil.IsKeyJustPressed(ebiten.KeyF6) {
 			c--
 			return nil
@@ -108,7 +119,7 @@ func (e *chip8Emulator) Update() error {
 
 		// This advances the processor one tick/cycle
 		runtimeError := e.vm.Cycle()
-		checkErr(runtimeError)
+		e.checkErr(runtimeError)
 	}
 
 	return nil
@@ -147,7 +158,7 @@ func (e *chip8Emulator) SoftReset() {
 }
 
 // Handle runtime errors which are always fatal
-func checkErr(err error) {
+func (e *chip8Emulator) checkErr(err error) {
 	if err != nil {
 		se, isSystemError := err.(chip8.SystemError)
 		code := 50 // Default code
@@ -156,6 +167,7 @@ func checkErr(err error) {
 		}
 
 		log.Printf("Unrecoverable system error: %s", err.Error())
+		e.vm.Dump()
 		os.Exit(code)
 	}
 }

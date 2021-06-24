@@ -22,7 +22,14 @@ func (e *chip8Emulator) renderDisplay() {
 	for y := 0; y < chip8.DisplayHeight; y++ {
 		for x := 0; x < chip8.DisplayWidth; x++ {
 			if e.vm.DisplayValueAt(x, y) == 1 {
-				e.display.Set(x, y, e.fgColor)
+				if !e.vm.HighRes {
+					e.display.Set(x*2, y*2, e.fgColor)
+					e.display.Set(x*2+1, y*2, e.fgColor)
+					e.display.Set(x*2, y*2+1, e.fgColor)
+					e.display.Set(x*2+1, y*2+1, e.fgColor)
+				} else {
+					e.display.Set(x, y, e.fgColor)
+				}
 			}
 		}
 	}
