@@ -12,10 +12,10 @@
 
     <script src="js/main.js"></script>
 
-    <title>CHIP-8 ~ Go & WASM</title>
+    <title>CHIP-8: Go Emulator</title>
   </head>
-  <body onload="createStoppedEmulator();">
-    <select id="program" onchange="createRunningEmulator()">
+  <body>
+    <select id="program" onchange="run()" onfocus="(e)=>{console.log(e)}">
       <option value="super/ALIEN">ALIEN (Super C8)</option>
       <option value="super/ANT">ANT (Super C8)</option>
       <option value="super/BLINKY">BLINKY (Super C8)</option>
@@ -48,12 +48,12 @@
       <option>WORM</option>
     </select>
 
-    <button onclick="createRunningEmulator()">LOAD</button>
+    <button onclick="run()">LOAD / SOFT RESET</button>
 
-    <button onclick="createStoppedEmulator()">RESET</button>
+    <button onclick="reset()">HARD RESET</button>
 
     SPEED:
-    <select id="speed">
+    <select id="speed" onchange="run()">
       <option>1</option>
       <option>5</option>
       <option>10</option>
@@ -67,7 +67,7 @@
     </select>
 
     THEME:
-    <select id="theme">
+    <select id="theme" onchange="run()">
       <option value="#00ff00,#000000">GREEN</option>
       <option value="#ffa200,#1c1201">AMBER</option>
       <option value="#ffffff,#000000">WHITE</option>
@@ -85,12 +85,12 @@
 
     <hr />
 
-    <!-- the iframe with the emulator will go here -->
-    <div id="wrapper"></div>
+    <div id="wrapper">
+      <iframe id="emulator" src="emulator.html" width="1024" height="512"> </iframe>
+    </div>
 
     Controls:<br />
-    Note. Each game uses different keypad inputs, sorry but you will have to
-    experiment, but WASD is common for movement<br /><br />
+    Note. Each game uses different keypad inputs, sorry but you will have to experiment, but WASD is common for movement<br /><br />
     <table>
       <tr>
         <td>
@@ -99,15 +99,11 @@
         <td>
           <ul>
             <li><b>F5</b> - Pause the system</li>
-            <li>
-              <b>F6</b> - When paused step through instructions (useful when
-              debug is enabled)
-            </li>
-            <li>
-              <b>F11</b> - Enable debugger, which will be output to stdout or
-              the browser console
-            </li>
+            <li><b>F6</b> - When paused step through instructions (useful when debug is enabled)</li>
+            <li><b>F11</b> - Enable debugger, which will be output to stdout or the browser console</li>
             <li><b>F12</b> - Reset system and reload the program</li>
+            <li><b>[</b> - Slow down the emulation</li>
+            <li><b>]</b> - Speed up the emulation</li>
           </ul>
         </td>
       </tr>

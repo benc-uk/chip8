@@ -1,42 +1,28 @@
 //
-function createRunningEmulator() {
-  removeFrame();
-  const emuFrame = createEmuFrame();
-  const pgmName = document.querySelector("#program").value;
+// Tell the emulator to start running with a postMessage
+//
+function run() {
+  // This removes focus e.g. from the select rom dropdown
+  document.activeElement.blur()
 
-  const theme = document.querySelector("#theme").value;
-  fgcolour = theme.split(",")[0];
-  bgcolour = theme.split(",")[1];
+  const theme = document.querySelector('#theme').value
+  const emuFrame = document.querySelector('#emulator')
 
-  emuFrame.setAttribute("data-pgm-name", "roms/" + pgmName);
-  emuFrame.setAttribute("data-speed", document.querySelector("#speed").value);
-  emuFrame.setAttribute("data-fgcolour", fgcolour);
-  emuFrame.setAttribute("data-bgcolour", bgcolour);
-
-  // By appending the iframe we start everything
-  document.querySelector("#wrapper").appendChild(emuFrame);
+  emuFrame.contentWindow.postMessage(
+    {
+      programName: document.querySelector('#program').value,
+      speed: document.querySelector('#speed').value,
+      fgColour: theme.split(',')[0],
+      bgColour: theme.split(',')[1],
+    },
+    '*'
+  )
 }
 
 //
-function createStoppedEmulator() {
-  removeFrame();
-  document.querySelector("#wrapper").appendChild(createEmuFrame());
-}
-
+// Simply hard reset the emulator by reloading the frame
 //
-function removeFrame() {
-  oldFrame = document.querySelector("#emulator");
-  if (oldFrame) {
-    document.querySelector("#wrapper").removeChild(oldFrame);
-  }
-}
-
-//
-function createEmuFrame() {
-  var emuFrame = document.createElement("iframe");
-  emuFrame.src = "emulator.html";
-  emuFrame.id = "emulator";
-  emuFrame.width = 1024;
-  emuFrame.height = 512;
-  return emuFrame;
+function reset() {
+  const emuFrame = document.querySelector('#emulator')
+  emuFrame.contentWindow.location.reload()
 }
