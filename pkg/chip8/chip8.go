@@ -65,12 +65,13 @@ type VM struct {
 	// Supporting fields for emulation. not part of the system architecture
 	debug          bool
 	DisplayUpdated bool
-
+	// Flag for quirks e.g instructions F
+	modernMode bool
 	// Keys that are currently pressed, values are 0x0 ~ 0xF
 	Keys []uint8
 }
 
-func NewVM() *VM {
+func NewVM(modernMode bool) *VM {
 	v := VM{}
 	console.Info("CHIP-8 system created...")
 	v.Reset()
@@ -83,40 +84,17 @@ func NewVM() *VM {
 		v.memory[FontLargeBase+i] = fontByte
 	}
 
+	// Default to modern / quirks mode
+	v.modernMode = modernMode
+
 	// Start the timer loops for the VM
 	go v.TimerLoop()
 
 	return &v
 }
 
-// Run the VM processor with a channel for reporting errors
-func (v *VM) Run(errors chan error, delay int) {
-	// Start delay timer loop in separate goroutine
-	go v.TimerLoop()
-
-	tick := 0
-	// Infinite loop, executing processor cycles
-	for {
-		if tick%900000 == 0 {
-			tick = 0
-			err := v.Cycle()
-
-			// Any errors from the processor cycle, pass to the channel to notify listeners
-			if err != nil {
-				errors <- err
-				// Halt the processor
-				return
-			}
-		}
-		tick++
-		// Delay to slow down the processor
-		//time.Sleep(time.Duration(1) * time.Nanosecond)
-	}
-}
-
 // Cycle is the heart of the CHIP-8 emulator, running a single processor cycle
 func (v *VM) Cycle() error {
-
 	v.debugLogf("============== PC: %02X ==================\n", v.pc)
 
 	// First get the 16 bit opcode at the current PC
@@ -136,7 +114,9 @@ func (v *VM) Cycle() error {
 	}
 
 	// Debug VM system state, PC, index, registers, stack etc
-	v.dump()
+	if v.debug {
+		v.Dump()
+	}
 
 	return nil
 }
@@ -188,7 +168,8 @@ func (v *VM) execute(o Opcode) error {
 	case 0x0:
 		{
 			if o.y == 0xC {
-				v.insSCRD(o.n)
+				v.insSCRD(o.n) // Super CHIP-8
+				return nil
 			}
 			switch o.nn {
 			case 0xE0:
@@ -201,13 +182,15 @@ func (v *VM) execute(o Opcode) error {
 				v.insSCRR() // Super CHIP-8
 			case 0xFC:
 				v.insSCRL() // Super CHIP-8
+			case 0xFD:
+				v.insEXIT() // Super CHIP-8
 			case 0xFF:
 				v.insHIGH() // Super CHIP-8
-				// default:
-				// 	return SystemError{
-				// 		reason: fmt.Sprintf("Invalid opcode %+v", o),
-				// 		code:   errorBadOpcode,
-				// 	}
+			default:
+				return SystemError{
+					reason: fmt.Sprintf("Invalid opcode %+v", o),
+					code:   errorBadOpcode,
+				}
 			}
 		}
 	case 0x1:
@@ -294,6 +277,12 @@ func (v *VM) execute(o Opcode) error {
 				v.insLDIx(o.x)
 			case 0x65:
 				v.insLDxI(o.x)
+			case 0x75:
+				console.Error("F075 unsupported")
+				return nil
+			case 0x85:
+				console.Error("F085 unsupported")
+				return nil
 			default:
 				return SystemError{
 					reason: fmt.Sprintf("Invalid opcode %+v", o),

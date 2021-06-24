@@ -1,5 +1,5 @@
 //
-// CHIP-8 - Implementation of opcodes / instructions here
+// CHIP-8 - Implementation of opcodes / instructions
 // Ben C, June 2021
 // Notes:
 
@@ -23,7 +23,6 @@ func (v *VM) insCLS() {
 		}
 	}
 	v.DisplayUpdated = true
-
 }
 
 // RET - Return - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#00EE
@@ -37,46 +36,6 @@ func (v *VM) insRET() {
 	stackAddr := v.stack[i]
 	v.stack = v.stack[:i]
 	v.pc = stackAddr
-}
-
-// HIGH - Enable hires (Super CHIP-8)
-func (v *VM) insHIGH() {
-	v.HighRes = true
-}
-
-// LOW - Disable hires (Super CHIP-8)
-func (v *VM) insLOW() {
-	v.HighRes = false
-}
-
-// LOW - Scroll right (Super CHIP-8)
-func (v *VM) insSCRR() {
-	for y := 0; y < DisplayHeight; y++ {
-		var x int
-		for x = DisplayWidth - 1; x >= 4; x-- {
-			v.display[x-4][y] = v.display[x][y]
-		}
-		// wipe the last 4 pixels
-		v.display[x][y] = 0
-		v.display[x-1][y] = 0
-		v.display[x-2][y] = 0
-		v.display[x-3][y] = 0
-	}
-}
-
-// SCRL - Scroll left (Super CHIP-8)
-func (v *VM) insSCRL() {
-	for y := 0; y < DisplayHeight; y++ {
-		var x int
-		for x = 0; x < DisplayWidth-4; x++ {
-			v.display[x][y] = v.display[x+4][y]
-		}
-		// wipe the last 4 pixels
-		v.display[x][y] = 0
-		v.display[x+1][y] = 0
-		v.display[x+2][y] = 0
-		v.display[x+3][y] = 0
-	}
 }
 
 //
@@ -105,27 +64,6 @@ func (v *VM) insJPV0(addr uint16) {
 }
 
 //
-// One param: nibble in n
-//
-
-// SCRD n - Scroll down n pixels (Super CHIP-8)
-func (v *VM) insSCRD(n byte) {
-	var y uint8
-	for y = DisplayHeight - 1; y >= n; y-- {
-		for x := 0; x < DisplayWidth; x++ {
-
-			v.display[x][y] = v.display[x][y-n]
-		}
-	}
-	// Wipe the remaining top n rows of pixels
-	for y = 0; y < n; y++ {
-		for x := 0; x < DisplayWidth; x++ {
-			v.display[x][y] = 0
-		}
-	}
-}
-
-//
 // One param: nibble in x
 //
 
@@ -136,16 +74,14 @@ func (v *VM) insLDf(reg uint8) {
 	v.index = FontBase + val
 }
 
-// LD SF, Vx - load addr of big/super font sprite for value of Vx into i (Super CHIP-8)
-func (v *VM) insLDSf(reg uint8) {
-	// NOTE: Each font sprite is 10 bytes "high"
-	val := uint16(v.registers[reg]) * 10
-	v.index = FontLargeBase + val
-}
-
 // ADD I, Vx - Add value in Vx to i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx1E
 func (v *VM) insADDIx(reg uint8) {
 	v.index += uint16(v.registers[reg])
+	if v.index >= memSize {
+		v.SetFlag(1)
+	} else {
+		v.SetFlag(0)
+	}
 }
 
 // SKP Vx - Skip if key with val Vx is held - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Ex9E
@@ -195,6 +131,7 @@ func (v *VM) insLDBx(reg uint8) {
 }
 
 // LD [I], Vx - store reg V0 through Vx into mem i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx55
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
 func (v *VM) insLDIx(reg uint8) {
 	for ix := uint16(0); ix <= uint16(reg); ix++ {
 		addr := v.index + ix
@@ -203,9 +140,16 @@ func (v *VM) insLDIx(reg uint8) {
 		}
 		v.memory[addr] = v.registers[ix]
 	}
+
+	// handle quirks, where index is NOT incremented
+	if v.modernMode {
+		return
+	}
+	v.index += uint16(reg)
 }
 
 // LD Vx, [I] - load reg V0 through Vx from mem i - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx65
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
 func (v *VM) insLDxI(reg uint8) {
 	for ix := uint16(0); ix <= uint16(reg); ix++ {
 		if v.index+ix >= memSize {
@@ -213,6 +157,12 @@ func (v *VM) insLDxI(reg uint8) {
 		}
 		v.registers[ix] = v.memory[v.index+ix]
 	}
+
+	// handle quirks, where index is NOT incremented
+	if v.modernMode {
+		return
+	}
+	v.index += uint16(reg)
 }
 
 // LD Vx, K - Wait for any key in Vx to be pressed - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#Fx0A
@@ -297,7 +247,7 @@ func (v *VM) insXORxy(regx, regy uint8) {
 func (v *VM) insADDxy(regx, regy uint8) {
 	regxPrev := v.registers[regx]
 	v.registers[regx] = v.registers[regx] + v.registers[regy]
-	if v.registers[regx] < regxPrev {
+	if v.registers[regx] <= regxPrev {
 		v.SetFlag(1)
 	} else {
 		v.SetFlag(0)
@@ -306,7 +256,7 @@ func (v *VM) insADDxy(regx, regy uint8) {
 
 // SUB Vx, Vy - Sub Vy from Vx, store result into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy5
 func (v *VM) insSUBxy(regx, regy uint8) {
-	if v.registers[regx] > v.registers[regy] {
+	if v.registers[regx] >= v.registers[regy] {
 		v.SetFlag(1)
 	} else {
 		v.SetFlag(0)
@@ -315,11 +265,15 @@ func (v *VM) insSUBxy(regx, regy uint8) {
 }
 
 // SHR Vx - bit 0 of Vx into VF, shift Vx to divide by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy6
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
 func (v *VM) insSHRxy(regx, regy uint8) {
-	v.registers[0xF] = v.registers[regx] & 1
-	v.registers[regx] >>= 1
-	// v.registers[0xF] = v.registers[regy] & 0x1
-	// v.registers[regx] = v.registers[regy] >> 1
+	if v.modernMode {
+		v.SetFlag(v.registers[regx] & 1)
+		v.registers[regx] >>= 1
+	} else {
+		v.SetFlag(v.registers[regy] & 1)
+		v.registers[regx] = (v.registers[regy] >> 1)
+	}
 }
 
 // SUBN Vx, Vy - Sub Vx from Vy into Vx. Sets VF - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xy7
@@ -334,9 +288,15 @@ func (v *VM) insSUBNxy(regx, regy uint8) {
 }
 
 // SHL Vx, Vy - Most sig bit of Vx into VF, shift Vx left to mult by 2 - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#8xyE
+// NOTE: Multi mode instruction, see https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md#compatibility
 func (v *VM) insSHLxy(regx, regy uint8) {
-	v.registers[0xF] = v.registers[regx] >> 7
-	v.registers[regx] <<= 1
+	if v.modernMode {
+		v.SetFlag(v.registers[regx] >> 7)
+		v.registers[regx] <<= 1
+	} else {
+		v.SetFlag(v.registers[regy] >> 7)
+		v.registers[regx] = (v.registers[regy] << 1)
+	}
 }
 
 // SHL Vx, Vy - Skip PC if Vx != Vy - http://devernay.free.fr/hacks/chip8/C8TECH10.HTM#9xy0
@@ -355,10 +315,10 @@ func (v *VM) insDRW(reg1, reg2, height uint8) {
 	x := v.registers[reg1] % DisplayWidth
 	y := v.registers[reg2] % DisplayHeight
 	v.SetFlag(0)
+	v.DisplayUpdated = true
 
 	if height == 0 && v.HighRes {
-		draw16Sprite(x, y)
-		v.DisplayUpdated = true
+		v.draw16Sprite(x, y)
 		return
 	}
 
@@ -387,19 +347,6 @@ func (v *VM) insDRW(reg1, reg2, height uint8) {
 			if spriteBit != displayBit {
 				v.display[x+xbit][y+row] = 1
 			}
-
 		}
-	}
-
-	v.DisplayUpdated = true
-}
-
-func draw16Sprite(x, y byte) {
-	var row byte
-	for row = 0; row < 16; row++ {
-		if y+row >= DisplayHeight {
-			return
-		}
-
 	}
 }

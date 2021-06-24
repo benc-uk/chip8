@@ -400,7 +400,7 @@ func Test_InsSNExy(t *testing.T) {
 // ===========================================
 //
 func vmForTest() *VM {
-	v := NewVM()
+	v := NewVM(true)
 
 	for i := range v.registers {
 		r := rand.Int()

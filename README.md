@@ -1,6 +1,6 @@
 # Go CHIP-8
 
-This is (yet another) CHIP-8 emulator written in Go. Yes there are many others but this one is mine.
+This is (yet another) CHIP-8 and Super CHIP-8 emulator written in Go. Yes there are many others but this one is mine.
 
 What is CHIP-8? It's a simple 8-bit virtual machine developed in the 1970s, which found new life in the 90s on HP graphing calculators. It's become the defacto "hello world" for emulator developers to get started with.
 
@@ -8,8 +8,9 @@ https://en.wikipedia.org/wiki/CHIP-8
 
 ### Screenshots
 
-<img src="./docs/screens/astro.jpg" width="400"> <img src="./docs/screens/rps.jpg" width="400">
-<img src="./docs/screens/blinky.jpg" width="400"> <img src="./docs/screens/ghost.png" width="400">
+<img src="./docs/screens/1.png" width="360"> <img src="./docs/screens/2.png" width="360">
+<img src="./docs/screens/3.png" width="360"> <img src="./docs/screens/4.png" width="360">
+<img src="./docs/screens/5.png" width="360"> <img src="./docs/screens/6.png" width="360">
 
 Goals:
 
@@ -17,9 +18,10 @@ Goals:
 - Learn about virtual machine development (no, I mean _real_ [virtual machines](https://wiki.c2.com/?VirtualMachine), not that ugly IaaS stuff)
 - Have fun
 
-Use cases & key features:
+Features:
 
 - WASM support, playable in browser as well as Linux and Windows binaries
+- Super CHIP-8 support (v1.1)
 - Configurable speed, colors
 - Builtin debugger
 
@@ -40,7 +42,7 @@ Supporting technologies and libraries:
 
 ## Try web version
 
-Online WASM version is playable here with a small set of roms/programs provided
+Online WASM version is playable here with a set of roms/programs provided
 
 https://code.benco.io/chip8/web/
 
@@ -119,14 +121,13 @@ A brief description of the top-level directories of this project are:
 - Linux, no sound because I can't test it
 - Some of the games from [chip8Archive](https://github.com/JohnEarnest/chip8Archive) do not work. However testing with several other CHIP-8 emulators, I saw the same behavior. Those games seem to only run in the Octo emulator.
 
-# License
+# Acknowledgements & Links
 
-This project uses the MIT software license. See [full license file](./LICENSE)
+I used the following links (among others) when writing this emulator
 
-# Acknowledgements
-
-- https://chip-8.github.io/links/
-- https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
-- http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
-- https://multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
-- https://github.com/massung/CHIP-8
+- Great archive of CHIP-8 links - https://chip-8.github.io/links/
+- INCREDIBLE blog post how to write a CHIP-8 emulator - https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
+- Cowgod's Chip-8 technical reference http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+- Very good emulator written in Go I used a lot as a reference - https://github.com/massung/CHIP-8
+- Guide to different CHIP-8 versions - https://chip-8.github.io/extensions/
+- Another great reference - https://github.com/mattmikolay/chip-8/wiki 
