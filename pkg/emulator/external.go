@@ -37,14 +37,42 @@ func (e *chip8Emulator) renderDisplay() {
 
 func (e *chip8Emulator) readKeyboard() {
 	// Emulator specific keys
+
+	// Pause the emulator
 	if inpututil.IsKeyJustPressed(ebiten.KeyF5) {
 		e.paused = !e.paused
 	}
+	// Enable debug logs
 	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
 		e.vm.SetDebug(!e.vm.IsDebugging())
 	}
+	// Soft reset
 	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
 		e.SoftReset()
+	}
+	// Slow down
+	if inpututil.IsKeyJustPressed(ebiten.KeyBracketLeft) {
+		delta := 5
+		if e.speed < 10 {
+			delta = 1
+		}
+		e.speed = e.speed - delta
+		if e.speed <= 0 {
+			e.speed = 1
+		}
+		e.showSpeed = 120
+	}
+	// Speed up
+	if inpututil.IsKeyJustPressed(ebiten.KeyBracketRight) {
+		delta := 5
+		if e.speed < 10 {
+			delta = 1
+		}
+		e.speed = e.speed + delta
+		if e.speed <= 0 {
+			e.speed = 1
+		}
+		e.showSpeed = 120
 	}
 
 	e.vm.Keys = []uint8{}

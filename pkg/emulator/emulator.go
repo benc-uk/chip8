@@ -22,7 +22,7 @@ import (
 )
 
 // Version is the emulator version
-var Version = "0.0.2"
+var Version = "1.1.0"
 
 //var pixelColour = color.RGBA{0x00, 0xff, 0x00, 0xff}
 
@@ -36,6 +36,7 @@ type chip8Emulator struct {
 	pgmData   []byte // Only stored so we can do a soft reset
 	fgColor   color.RGBA
 	bgColor   color.RGBA
+	showSpeed int
 
 	audioContext *audio.Context
 	bleeper      *audio.Player
@@ -57,12 +58,12 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 	}
 	fgC, err := parseHexColor(fgColor)
 	if err != nil {
-		fmt.Printf("Colour error: %s\n", err)
+		fmt.Printf("Colour parsing error: %s\n", err)
 		os.Exit(1)
 	}
 	bgC, err := parseHexColor(bgColor)
 	if err != nil {
-		fmt.Printf("Colour error: %s\n", err)
+		fmt.Printf("Colour parsing error: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -87,6 +88,7 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 		pgmData:      program,
 		fgColor:      fgC,
 		bgColor:      bgC,
+		showSpeed:    0,
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
@@ -94,6 +96,7 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 	//ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	ebiten.SetVsyncEnabled(false)
 
+	console.Successf("Starting CHIP-8 system, processor at address 0x%04X\n", 0x200)
 	if err := ebiten.RunGame(emu); err != nil {
 		log.Println(err)
 		os.Exit(1)
@@ -143,6 +146,10 @@ func (e *chip8Emulator) Draw(screen *ebiten.Image) {
 	}
 	if e.vm.IsDebugging() {
 		debugMsg += "\nDEBUGGING"
+	}
+	if e.showSpeed > 0 {
+		debugMsg += fmt.Sprintf("\nSPEED: %d", e.speed)
+		e.showSpeed--
 	}
 	ebitenutil.DebugPrint(screen, debugMsg)
 }
