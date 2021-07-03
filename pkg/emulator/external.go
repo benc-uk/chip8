@@ -16,24 +16,23 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-var indexmap = map[int]bool{}
-
 func (e *chip8Emulator) renderDisplay() {
-	e.display.Fill(e.bgColor)
+	if e.colourMap != nil {
+		e.display.Fill(e.colourMap.getBackgroundColour())
+	} else {
+		e.display.Fill(e.bgColor)
+	}
 
 	for y := 0; y < chip8.DisplayHeight; y++ {
 		for x := 0; x < chip8.DisplayWidth; x++ {
 			pixelValue := e.vm.DisplayValueAt(x, y)
-			if !indexmap[int(pixelValue)] {
-				//console.Errorf("color: %04X\n", pixelValue)
-				indexmap[int(pixelValue)] = true
-			}
 
 			// Default colour
 			pixelColour := e.fgColor
 			// Try to find a colour from the map if it exists
 			if e.colourMap != nil {
-				if newColour := e.colourMap.getColour(int(pixelValue)); newColour != nil {
+				pixelColour = *e.colourMap.getDefaultColour()
+				if newColour := e.colourMap.getSpriteColour(int(pixelValue)); newColour != nil {
 					pixelColour = *newColour
 				}
 			}

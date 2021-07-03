@@ -39,7 +39,7 @@ func main() {
 	checkError(err)
 	log.Println("Program file downloaded OK")
 
-	debug, err := strconv.ParseBool(os.Args[1])
+	debug, err := strconv.Atoi(os.Args[1])
 	checkError(err)
 	speed, err := strconv.Atoi(os.Args[2])
 	checkError(err)
@@ -50,7 +50,7 @@ func main() {
 	bg := os.Args[5]
 	checkError(err)
 
-	emulator.Start(body, debug, speed, pixelSize, fg, bg)
+	emulator.Start(body, debug, speed, pixelSize, fg, bg, nil)
 }
 
 func checkError(err error) {

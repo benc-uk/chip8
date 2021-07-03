@@ -38,14 +38,14 @@ type chip8Emulator struct {
 	fgColor   color.RGBA
 	bgColor   color.RGBA
 	showSpeed int
-	colourMap ColourMap
+	colourMap *ColourMap
 
 	audioContext *audio.Context
 	bleeper      *audio.Player
 }
 
 // Start is called by the WASM and console main.go to start everything
-func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string, bgColor string) {
+func Start(program []byte, debugLevel int, speed int, pixelSize int, fgColor string, bgColor string, colourMap *ColourMap) {
 	console.Infof("Starting CHIP-8 emulator version v%s\n\n", Version)
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "js" {
@@ -71,7 +71,8 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 
 	// Create a new CHIP-8 virtual machine, and load program into it
 	vm := chip8.NewVM(true)
-	vm.SetDebug(debug)
+	vm.SetDebug(debugLevel == 2)
+	vm.DebugSprites = debugLevel == 1
 
 	// Load supplied data as a program
 	err = vm.LoadProgram(program)
@@ -91,13 +92,15 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 		fgColor:      fgC,
 		bgColor:      bgC,
 		showSpeed:    0,
-		colourMap:    GetColourMap(md5.Sum(program)),
+		colourMap:    colourMap,
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
 	ebiten.SetWindowTitle("Go CHIP-8 v" + Version)
 	//ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	ebiten.SetVsyncEnabled(false)
+
+	// Create a new audio player	and set it to play the program
 
 	console.Successf("Program MD5: %X\n", md5.Sum(program))
 

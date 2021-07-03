@@ -1,0 +1,12 @@
+background: 0
+default: 2
+sprites:
+  '32C': 1 # road sides
+  '332': 3 # grass sides
+  '32E': 3 # grass sides
+  '330': 3 # grass sides
+  '338': 7 # cars
+ranges:
+  - colour: 5
+    start: '400'
+    end: '500'

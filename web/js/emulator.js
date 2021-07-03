@@ -72,7 +72,7 @@ async function main() {
       const wasm = await WebAssembly.instantiateStreaming(fetch('chip8.wasm'), go.importObject)
       const pixelSize = Math.floor(window.frameElement.width / CHIP8_DISPLAY_WIDTH)
 
-      go.argv = ['roms/' + msg.data.programName, false, msg.data.speed, pixelSize, msg.data.fgColour, msg.data.bgColour]
+      go.argv = ['roms/' + msg.data.programName, 0, msg.data.speed, pixelSize, msg.data.fgColour, msg.data.bgColour]
       go.run(wasm.instance)
     },
     false

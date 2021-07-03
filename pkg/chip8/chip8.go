@@ -64,11 +64,14 @@ type VM struct {
 
 	// Supporting fields for emulation. not part of the system architecture
 	debug          bool
+	DebugSprites   bool
 	DisplayUpdated bool
 	// Flag for quirks e.g instructions F
 	modernMode bool
 	// Keys that are currently pressed, values are 0x0 ~ 0xF
 	Keys []uint8
+	// This is ONLY used for debugging sprites in the DRW instruction
+	debugSpriteMap map[uint16]bool
 }
 
 func NewVM(modernMode bool) *VM {
@@ -86,6 +89,8 @@ func NewVM(modernMode bool) *VM {
 
 	// Default to modern / quirks mode
 	v.modernMode = modernMode
+	v.DebugSprites = false
+	v.debugSpriteMap = make(map[uint16]bool)
 
 	// Start the timer loops for the VM
 	go v.TimerLoop()

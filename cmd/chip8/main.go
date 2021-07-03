@@ -24,7 +24,7 @@ const banner = `
  ╚═════╝  ╚═════╝      ╚═════╝╚═╝  ╚═╝╚═╝╚═╝            ╚════╝`
 
 func main() {
-	var debugFlag = flag.Bool("debug", false, "Enable debug, lots of output & very slow")
+	var debugLevelFlag = flag.Int("debug", 0, "0 = off, 1 = sprites only, 2 = full")
 	var speedFlag = flag.Int("speed", 12, "Speed of the emulator in cycles per tick")
 	var scaleFlag = flag.Int("scale", 10, "Size of pixels, default results in a 640x320 window")
 	var fgFlag = flag.String("fg-colour", "#22DD22", "Colour of foreground pixels in hex")
@@ -46,5 +46,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	emulator.Start(pgmBytes, *debugFlag, *speedFlag, *scaleFlag, *fgFlag, *bgFlag)
+	colourMap := emulator.LoadColourMap(progFile)
+	emulator.Start(pgmBytes, *debugLevelFlag, *speedFlag, *scaleFlag, *fgFlag, *bgFlag, colourMap)
 }
