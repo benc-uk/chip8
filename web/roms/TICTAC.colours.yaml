@@ -1,0 +1,8 @@
+background: 0
+default: 7
+sprites:
+  '039A': 1
+  '039B': 1
+  '03AF': 3
+  '0050': 7
+  '03AA': 5

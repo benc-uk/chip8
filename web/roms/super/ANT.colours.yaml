@@ -1,0 +1,18 @@
+background: 0
+default: 3
+sprites:
+  '0AF8': 5 # arrow
+  '0A68': 4 # ant
+  '0A88': 4 # ant
+  '0AA8': 4 # ant
+  '0AC8': 4 # ant
+  '0B38': 6 # spikes
+  '0BDC': 8 # man
+  '0D5C': 1 # spray
+ranges:
+  - colour: 2 # raid box
+    start: '0B18'
+    end: '0B30'
+  - colour: 1 # rocks
+    start: '0B5C'
+    end: '0BBC'

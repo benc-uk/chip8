@@ -26,7 +26,7 @@ const banner = `
  ╚═════╝  ╚═════╝      ╚═════╝╚═╝  ╚═╝╚═╝╚═╝            ╚════╝`
 
 func main() {
-	var debugLevelFlag = flag.Int("debug", 0, "0 = off, 1 = sprites only, 2 = full")
+	var debugLevelFlag = flag.Int("debug", 0, "Debug output level: 0 = off, 1 = sprites only, 2 = full")
 	var speedFlag = flag.Int("speed", 12, "Speed of the emulator in cycles per tick")
 	var scaleFlag = flag.Int("scale", 10, "Size of pixels, default results in a 640x320 window")
 	var fgFlag = flag.Int("fg", 2, "Colour of foreground pixels, pallette index: 0-8")

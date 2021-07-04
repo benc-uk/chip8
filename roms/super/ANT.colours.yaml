@@ -2,8 +2,8 @@ background: 0
 default: 3
 sprites:
   '0AF8': 5 # arrow
-  '0A68': 4 # ant
-  '0A88': 4 # ant
+  '0A68': 4 # ant forward
+  '0A88': 4 # ant backwards
   '0AA8': 4 # ant
   '0AC8': 4 # ant
   '0B38': 6 # spikes

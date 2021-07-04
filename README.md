@@ -53,16 +53,20 @@ Download from [releases](https://github.com/benc-uk/chip8/releases), unzip/untar
 ```text
 chip8 <flags> <program-filename>
 
-  -debug
-        Enable debug, lots of output & very slow
+  -bg int
+        Colour of background, pallette index: 0-8 (default 0)
+  -fg int
+        Colour of foreground pixels, pallette index: 0-8 (default 2)
+  -nocolour
+        Force mono mode even if a colour map file is found
+  -pallette string
+        Colour pallette; spectrum, c64 or vaporwave (default "spectrum")
   -scale int
         Size of pixels, default results in a 640x320 window (default 10)
   -speed int
         Speed of the emulator in cycles per tick (default 12)
-  -bg-colour string
-        Colour of background in hex (default "#000000")
-  -fg-colour string
-        Colour of foreground pixels hex (default "#22DD22")
+  -debug int
+        0 = off, 1 = sprites only, 2 = full        
 ```
 
 ## Controls
@@ -77,6 +81,69 @@ In addition the emulator provides several other keys
 - **F6** - Step through instructions (useful when debug is enabled)
 - **F11** - Enable debugger, which will be output to stdout or the browser console
 - **F12** - Reset system and reload the program
+- **[** - Slow down the emulator speed
+- **]** - Increase the emulator speed
+
+## Colour Support
+
+This emulator supports two main colour modes, both modes have 9 colours (black and 8 other colours) and comes with three builtin colour pallettes:
+
+ - Spectrum: Bright colours, taken from the ZX Spectrum
+ - C64: Less bright colours, taken from the Commodore 64
+ - Vaporwave: Less saturated pastel tones 
+
+The pallettes are all indexed the same:
+
+0. Black 
+1. White
+2. Red
+3. Green
+4. Blue
+5. Magenta / Pink
+6. Yellow
+7. Cyan / Light Blue
+8. Orange
+
+### Mode: 1-Bit Monochrome 
+
+This is the default mode, in this mode you can specify the foreground colour (for pixels set to 1) and background colour (for pixels that are 0), the colours are specified as a value between 0 and 8 for the pallette index. Defualts are 0 (black) for background and 2 (green) for foreground
+
+### Mode: Multi-Colour Mapping
+
+This is a special mode, unique (AFAIK) to this emulator and it attempts to add multi-colour support to the CHIP-8 system without the need for any software or system changes (i.e. it can work with ALL existing ROMs, games and programs), and supports with both CHIP-8 and Super CHIP-8 software
+
+<img src="./docs/screens/car-colour.png" width="360"> <img src="./docs/screens/joust-colour.png" width="360">
+
+This mode is only enabled if a colour mapping file is found.  
+Colour mapping files are YAML files named as follows `{rom-name}.colours.yaml` and should be in the same directory as the ROM file, e.g. of you were loading the following program ROM `roms/stuff/foo.ch8`, the mapping file looked for would be `roms/stuff/foo.ch8.colours.yaml`
+
+If this file is not found this mode is disabled and the emulator defaults back to 1-bit mode. 
+
+In summary this mode relies on mapping sprite addresses in memory with colour (pallette index) values. e.g. if the program stored the sprite for an enemy space ship at address 0xA40 we could decide to draw that sprite in green, but the sprite stored at 0xA58 could be shown in red.
+
+The mapping file syntax is a little complex but a summary and example follows:
+
+```yaml
+background: 0 # black background
+default: 3 # make foreground color green
+sprites:
+  '0AF8': 2 # sprite we want in red
+  '0A68': 4 # sprite we want in blue
+  '0A88': 4 # sprite we want in blue
+ranges:
+  - colour: 6 # a range of sprites in yellow
+    start: '0B18'
+    end: '0B30'
+  - colour: 1 # a range of sprites in white
+    start: '0B5C'
+    end: '0BBC'
+```
+
+In order to aid creation of these files a special debug mode `-debug=1` is included which will output the addresses of sprites the first time they are drawn.
+
+TODO: Full explanation / reference for *.colours.yaml* files
+
+Check out the roms directory in this repo for some example colour mapping files
 
 ## Developing & building locally
 
