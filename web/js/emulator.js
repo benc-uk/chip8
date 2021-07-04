@@ -1,5 +1,5 @@
 const CHIP8_DISPLAY_WIDTH = 128
-const VERSION = '1.0.0'
+const VERSION = '1.5.0'
 
 // NOTE. We get our params from the iframe data attributes, hey it's not elegant but it works
 // IMO it's better than postMessage
@@ -71,8 +71,9 @@ async function main() {
 
       const wasm = await WebAssembly.instantiateStreaming(fetch('chip8.wasm'), go.importObject)
       const pixelSize = Math.floor(window.frameElement.width / CHIP8_DISPLAY_WIDTH)
+      const palletteName = 'spectrum'
 
-      go.argv = ['roms/' + msg.data.programName, 0, msg.data.speed, pixelSize, msg.data.fgColour, msg.data.bgColour]
+      go.argv = ['roms/' + msg.data.programName, 0, msg.data.speed, pixelSize, msg.data.fgColour, msg.data.bgColour, palletteName]
       go.run(wasm.instance)
     },
     false

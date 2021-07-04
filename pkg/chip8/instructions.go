@@ -356,6 +356,7 @@ func (v *VM) insDRW(reg1, reg2, height uint8) {
 					// Only output sprite message the first time we see this sprite address
 					v.debugSpriteMap[v.index] = true
 					console.Successf("DRAWING SPRITE %04X at, %d,%d\n", v.index, x, y)
+					v.debugSpriteMap[v.index] = true
 				}
 			}
 		}

@@ -5,6 +5,8 @@
 
 package chip8
 
+import "github.com/benc-uk/chip8/pkg/console"
+
 // HIGH - Enable hires (Super CHIP-8)
 func (v *VM) insHIGH() {
 	v.HighRes = true
@@ -115,7 +117,17 @@ func (v *VM) draw16Sprite(x, y byte) {
 			}
 
 			if spriteBit == 1 && displayBit == 0 {
-				v.display[x+bitIndex][y+row] = 1
+				// !NOTE! This is HIGHLY unorthodox, we store the sprite address here ONLY for colour support
+				// If you looking at this code writing your own CHIP-8 emulator set this to 1
+				v.display[x+bitIndex][y+row] = v.index
+
+				// Only for debugging sprite values
+				if !v.debugSpriteMap[v.index] && v.DebugSprites {
+					// Only output sprite message the first time we see this sprite address
+					v.debugSpriteMap[v.index] = true
+					console.Successf("DRAWING SPRITE %04X at, %d,%d\n", v.index, x, y)
+					v.debugSpriteMap[v.index] = true
+				}
 			}
 		}
 	}
