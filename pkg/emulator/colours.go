@@ -72,24 +72,6 @@ func init() {
 	pallettes[PalletteVaporWave] = vaporwave
 }
 
-// var joustMap = ColourMap{
-// 	0xA6A: 2,
-// 	0xA62: 2,
-// }
-
-// var brixMap = ColourMap{
-// 	0x030C: 5,
-// 	0x0312: 1,
-// 	0x0310: 4,
-// 	0x030E: 6,
-// }
-
-// var spacejamMap = ColourMap{
-// 	0x0396: 1,
-// 	0x03CC: 5,
-// 	0x0397: 7,
-// }
-
 func SimpleColourMap(fgIndex, bgIndex int, pallette string) *ColourMap {
 	colourMap := &ColourMap{}
 	colourMap.defaultColour = getPalletColour(fgIndex, pallette)

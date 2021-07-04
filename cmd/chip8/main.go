@@ -32,6 +32,7 @@ func main() {
 	var fgFlag = flag.Int("fg", 2, "Colour of foreground pixels, pallette index: 0-8")
 	var bgFlag = flag.Int("bg", 0, "Colour of background, pallette index: 0-8")
 	var palletteFlag = flag.String("pallette", "spectrum", "Colour pallette; spectrum, c64 or vaporwave")
+	var monoFlag = flag.Bool("nocolour", false, "Force mono mode even if a colour map file is found")
 	flag.Parse()
 
 	if len(flag.Args()) < 1 {
@@ -71,7 +72,8 @@ func main() {
 	romName := filepath.Base(progFile)
 	mapFilePath := filepath.Join(path, romName+".colours.yaml")
 	yamlRaw, err := ioutil.ReadFile(mapFilePath)
-	if err == nil {
+
+	if err == nil && !*monoFlag {
 		console.Infof("Enabling multi-colour mode, will map colours based on: %s\n", mapFilePath)
 		colourMap, _ = emulator.LoadColourMap(yamlRaw, pallette)
 	} else {

@@ -17,25 +17,16 @@ import (
 )
 
 func (e *chip8Emulator) renderDisplay() {
-	// if e.colourMap != nil {
 	e.display.Fill(e.colourMap.getBackgroundColour())
-	// } else {
-	// 	e.display.Fill(e.bgColor)
-	// }
 
 	for y := 0; y < chip8.DisplayHeight; y++ {
 		for x := 0; x < chip8.DisplayWidth; x++ {
 			pixelValue := e.vm.DisplayValueAt(x, y)
 
-			// // Default colour
-			// pixelColour := e.fgColor
-			// // Try to find a colour from the map if it exists
-			// if e.colourMap != nil {
 			pixelColour := *e.colourMap.getDefaultColour()
 			if newColour := e.colourMap.getSpriteColour(int(pixelValue)); newColour != nil {
 				pixelColour = *newColour
 			}
-			// }
 
 			if pixelValue > 0 {
 				if !e.vm.HighRes {
@@ -60,7 +51,7 @@ func (e *chip8Emulator) readKeyboard() {
 	}
 	// Enable debug logs
 	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
-		e.vm.SetDebug(!e.vm.IsDebugging())
+		e.vm.DebugLevel = chip8.DebugLevelFull
 	}
 	// Soft reset
 	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {

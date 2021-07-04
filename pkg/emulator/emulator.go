@@ -59,8 +59,7 @@ func Start(program []byte, debugLevel int, speed int, pixelSize int, colourMap *
 
 	// Create a new CHIP-8 virtual machine, and load program into it
 	vm := chip8.NewVM(true)
-	vm.SetDebug(debugLevel == 2)
-	vm.DebugSprites = debugLevel == 1
+	vm.DebugLevel = debugLevel
 
 	// Load supplied data as a program
 	err := vm.LoadProgram(program)
@@ -138,7 +137,7 @@ func (e *chip8Emulator) Draw(screen *ebiten.Image) {
 	if e.paused {
 		debugMsg = "PAUSED"
 	}
-	if e.vm.IsDebugging() {
+	if e.vm.DebugEnabled() {
 		debugMsg += "\nDEBUGGING"
 	}
 	if e.showSpeed > 0 {

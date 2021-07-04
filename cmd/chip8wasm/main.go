@@ -73,7 +73,7 @@ func main() {
 		colourMap, _ = emulator.LoadColourMap(mapBody, pallette)
 	} else {
 		log.Println("Basic 1-bit colour mode enabled")
-		_ = emulator.SimpleColourMap(fg, bg, pallette)
+		colourMap = emulator.SimpleColourMap(fg, bg, pallette)
 	}
 
 	if colourMap == nil {

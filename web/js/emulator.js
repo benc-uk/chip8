@@ -9,9 +9,9 @@ const VERSION = '1.5.0'
 //
 async function main() {
   // We need this so we can use the Fn keys in the emulator
-  document.body.onkeydown = function (e) {
-    if (!e.metaKey) {
-      e.preventDefault()
+  document.body.onkeydown = (evt) => {
+    if (!evt.metaKey) {
+      evt.preventDefault()
     }
   }
 
@@ -57,7 +57,7 @@ async function main() {
       }
 
       // Only way to trap anything, try catch does NOT work
-      window.addEventListener('error', function (event) {
+      window.addEventListener('error', () => {
         if (!errored) {
           errored = true
         }
@@ -70,10 +70,12 @@ async function main() {
       }
 
       const wasm = await WebAssembly.instantiateStreaming(fetch('chip8.wasm'), go.importObject)
+
       const pixelSize = Math.floor(window.frameElement.width / CHIP8_DISPLAY_WIDTH)
       const palletteName = 'spectrum'
+      const debugLevel = 0
+      go.argv = ['roms/' + msg.data.programName, debugLevel, msg.data.speed, pixelSize, msg.data.fgColour, msg.data.bgColour, palletteName]
 
-      go.argv = ['roms/' + msg.data.programName, 0, msg.data.speed, pixelSize, msg.data.fgColour, msg.data.bgColour, palletteName]
       go.run(wasm.instance)
     },
     false

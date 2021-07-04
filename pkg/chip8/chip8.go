@@ -22,7 +22,7 @@ const ProgBase = 0x200
 const FontBase = 0x0050
 
 // FontLargeBase is where the larger 10 byte fonts are stored
-const FontLargeBase = 0x0050 + 0x40 // 0x40 bytes is the size of the low res font
+const FontLargeBase = 0x0050 + 0x50 // 0x50 bytes is the size of the low res font
 
 // Normal CHIP-8 systems have 4KB of memory
 const memSize = 0x1000 // 4096 bytes
@@ -63,8 +63,7 @@ type VM struct {
 	HighRes bool
 
 	// Supporting fields for emulation. not part of the system architecture
-	debug          bool
-	DebugSprites   bool
+	DebugLevel     int
 	DisplayUpdated bool
 	// Flag for quirks e.g instructions F
 	modernMode bool
@@ -83,13 +82,14 @@ func NewVM(modernMode bool) *VM {
 	for i, fontByte := range font.GetFont() {
 		v.memory[FontBase+i] = fontByte
 	}
+
 	for i, fontByte := range font.GetLargeFont() {
 		v.memory[FontLargeBase+i] = fontByte
 	}
 
 	// Default to modern / quirks mode
 	v.modernMode = modernMode
-	v.DebugSprites = false
+	v.DebugLevel = DebugLevelOff
 	v.debugSpriteMap = make(map[uint16]bool)
 
 	// Start the timer loops for the VM
@@ -119,7 +119,7 @@ func (v *VM) Cycle() error {
 	}
 
 	// Debug VM system state, PC, index, registers, stack etc
-	if v.debug {
+	if v.DebugEnabled() {
 		v.Dump()
 	}
 
@@ -360,10 +360,10 @@ func (v *VM) GetSoundTimer() uint8 {
 	return v.soundTimer
 }
 
-func (v *VM) SetDebug(d bool) {
-	v.debug = d
-}
+// func (v *VM) SetDebug(d bool) {
+// 	v.debug = d
+// }
 
-func (v *VM) IsDebugging() bool {
-	return v.debug
-}
+// func (v *VM) IsDebugging() bool {
+// 	return v.debug
+// }

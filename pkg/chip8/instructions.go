@@ -347,12 +347,12 @@ func (v *VM) insDRW(reg1, reg2, height uint8) {
 			}
 
 			if spriteBit == 1 && displayBit == 0 {
-				// !NOTE! This is HIGHLY unorthodox, we store the sprite address here ONLY for colour support
-				// If you looking at this code writing your own CHIP-8 emulator set this to 1
+				// !NOTE! This is HIGHLY unorthodox, we store the sprite address here ONLY for colour remapping support
+				// If you looking at this code and writing your own CHIP-8 emulator set this to 1 !
 				v.display[x+xbit][y+row] = v.index
 
 				// Only for debugging sprite values
-				if !v.debugSpriteMap[v.index] && v.DebugSprites {
+				if !v.debugSpriteMap[v.index] && v.DebugLevel == DebugLevelSprite {
 					// Only output sprite message the first time we see this sprite address
 					v.debugSpriteMap[v.index] = true
 					console.Successf("DRAWING SPRITE %04X at, %d,%d\n", v.index, x, y)
