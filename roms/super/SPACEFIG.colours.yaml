@@ -1,0 +1,18 @@
+background: 0
+default: 1
+sprites:
+  '0AF6': 8 # laser
+  '0A0F': 7 # enemy 1
+  '0ACF': 4 # ship
+  '0AEF': 4 # lives
+  '0AF9': 3 # word-score
+  '0B01': 3
+  '0B09': 3
+  '0B11': 3
+  '0B19': 3 # word-lives
+  '0B21': 3 # word-lives
+  '0B29': 3 # word-lives
+  '0B31': 3 # word-lives
+  #'005F': 2 # enemy 2?
+  '0A2F': 2 # enemy 2
+  '0C3A': 5

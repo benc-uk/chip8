@@ -1,0 +1,5 @@
+background: 0
+default: 6
+sprites:
+  '031E': 4
+  '031B': 7

@@ -17,18 +17,25 @@ import (
 )
 
 func (e *chip8Emulator) renderDisplay() {
-	e.display.Fill(e.bgColor)
+	e.display.Fill(e.colourMap.getBackgroundColour())
 
 	for y := 0; y < chip8.DisplayHeight; y++ {
 		for x := 0; x < chip8.DisplayWidth; x++ {
-			if e.vm.DisplayValueAt(x, y) == 1 {
+			pixelValue := e.vm.DisplayValueAt(x, y)
+
+			pixelColour := *e.colourMap.getDefaultColour()
+			if newColour := e.colourMap.getSpriteColour(int(pixelValue)); newColour != nil {
+				pixelColour = *newColour
+			}
+
+			if pixelValue > 0 {
 				if !e.vm.HighRes {
-					e.display.Set(x*2, y*2, e.fgColor)
-					e.display.Set(x*2+1, y*2, e.fgColor)
-					e.display.Set(x*2, y*2+1, e.fgColor)
-					e.display.Set(x*2+1, y*2+1, e.fgColor)
+					e.display.Set(x*2, y*2, pixelColour)
+					e.display.Set(x*2+1, y*2, pixelColour)
+					e.display.Set(x*2, y*2+1, pixelColour)
+					e.display.Set(x*2+1, y*2+1, pixelColour)
 				} else {
-					e.display.Set(x, y, e.fgColor)
+					e.display.Set(x, y, pixelColour)
 				}
 			}
 		}
@@ -44,7 +51,7 @@ func (e *chip8Emulator) readKeyboard() {
 	}
 	// Enable debug logs
 	if inpututil.IsKeyJustPressed(ebiten.KeyF11) {
-		e.vm.SetDebug(!e.vm.IsDebugging())
+		e.vm.DebugLevel = chip8.DebugLevelFull
 	}
 	// Soft reset
 	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {

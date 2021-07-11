@@ -1,0 +1,12 @@
+background: 0
+default: 3
+sprites:
+  '03B7': 2 # alien wave 1
+  '03CF': 1 # ship and bullet
+  '03BD': 4 # alien wave 2
+  '03C3': 5 # alien wave 3
+  '03C9': 3 # alien wave 4
+ranges:
+  - colour: 5
+    start: '03D3'
+    end: '04CB'

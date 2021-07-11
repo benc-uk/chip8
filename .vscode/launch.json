@@ -14,7 +14,7 @@
       "env": {
         "DISPLAY": "192.168.0.34:0"
       },
-      "args": ["-debug=true", "-speed=1", "-scale=12", "roms/games/RPS.ch8"]
+      "args": ["-debug=1", "-speed=10", "-scale=12", "roms/game-pack/INVADERS"]
     }
   ]
 }

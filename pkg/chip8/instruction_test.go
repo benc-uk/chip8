@@ -31,7 +31,7 @@ func Test_InsCLS(t *testing.T) {
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			p := v.display[x][y]
-			assert.Equal(t, p, uint8(0), "pixel is not off")
+			assert.Equal(t, p, uint16(0), "pixel is not off")
 		}
 	}
 }
@@ -414,9 +414,9 @@ func vmForTest() *VM {
 	for y := 0; y < DisplayHeight; y++ {
 		for x := 0; x < DisplayWidth; x++ {
 			r := rand.Intn(100)
-			pixel := uint8(0)
+			pixel := uint16(0)
 			if r > 50 {
-				pixel = uint8(1)
+				pixel = uint16(1)
 			}
 			v.display[x][y] = pixel
 		}

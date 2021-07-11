@@ -1,0 +1,8 @@
+background: 0
+default: 2
+sprites:
+  '32C': 1 # road sides
+  '332': 3 # grass sides
+  '32E': 3 # grass sides
+  '330': 3 # grass sides
+  '338': 4 # cars

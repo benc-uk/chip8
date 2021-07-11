@@ -7,6 +7,7 @@
 package emulator
 
 import (
+	"crypto/md5"
 	"fmt"
 	"image/color"
 	"log"
@@ -22,7 +23,7 @@ import (
 )
 
 // Version is the emulator version
-var Version = "1.1.0"
+var Version = "1.5.0"
 
 //var pixelColour = color.RGBA{0x00, 0xff, 0x00, 0xff}
 
@@ -34,16 +35,15 @@ type chip8Emulator struct {
 	speed     int
 	paused    bool
 	pgmData   []byte // Only stored so we can do a soft reset
-	fgColor   color.RGBA
-	bgColor   color.RGBA
 	showSpeed int
+	colourMap *ColourMap
 
 	audioContext *audio.Context
 	bleeper      *audio.Player
 }
 
 // Start is called by the WASM and console main.go to start everything
-func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string, bgColor string) {
+func Start(program []byte, debugLevel int, speed int, pixelSize int, colourMap *ColourMap) {
 	console.Infof("Starting CHIP-8 emulator version v%s\n\n", Version)
 
 	if runtime.GOARCH == "js" || runtime.GOOS == "js" {
@@ -56,23 +56,13 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 	if pixelSize < 1 || pixelSize > 60 {
 		log.Fatalln("Pixel size must be be between 1 and 60")
 	}
-	fgC, err := parseHexColor(fgColor)
-	if err != nil {
-		fmt.Printf("Colour parsing error: %s\n", err)
-		os.Exit(1)
-	}
-	bgC, err := parseHexColor(bgColor)
-	if err != nil {
-		fmt.Printf("Colour parsing error: %s\n", err)
-		os.Exit(1)
-	}
 
 	// Create a new CHIP-8 virtual machine, and load program into it
 	vm := chip8.NewVM(true)
-	vm.SetDebug(debug)
+	vm.DebugLevel = debugLevel
 
 	// Load supplied data as a program
-	err = vm.LoadProgram(program)
+	err := vm.LoadProgram(program)
 	if err != nil {
 		fmt.Printf("R Tape loading error: %s\n", err)
 		os.Exit(1)
@@ -86,15 +76,18 @@ func Start(program []byte, debug bool, speed int, pixelSize int, fgColor string,
 		speed:        speed,
 		audioContext: audio.NewContext(44100),
 		pgmData:      program,
-		fgColor:      fgC,
-		bgColor:      bgC,
 		showSpeed:    0,
+		colourMap:    colourMap,
 	}
 
 	ebiten.SetWindowSize(chip8.DisplayWidth*pixelSize, chip8.DisplayHeight*pixelSize)
 	ebiten.SetWindowTitle("Go CHIP-8 v" + Version)
 	//ebiten.SetMaxTPS(ebiten.UncappedTPS)
 	ebiten.SetVsyncEnabled(false)
+
+	// Create a new audio player	and set it to play the program
+
+	console.Successf("Program MD5: %X\n", md5.Sum(program))
 
 	console.Successf("Starting CHIP-8 system, processor at address 0x%04X\n", 0x200)
 	if err := ebiten.RunGame(emu); err != nil {
@@ -144,7 +137,7 @@ func (e *chip8Emulator) Draw(screen *ebiten.Image) {
 	if e.paused {
 		debugMsg = "PAUSED"
 	}
-	if e.vm.IsDebugging() {
+	if e.vm.DebugEnabled() {
 		debugMsg += "\nDEBUGGING"
 	}
 	if e.showSpeed > 0 {

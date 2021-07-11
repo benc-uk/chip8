@@ -10,6 +10,10 @@ import (
 	"github.com/benc-uk/chip8/pkg/console"
 )
 
+const DebugLevelOff = 0
+const DebugLevelSprite = 1
+const DebugLevelFull = 2
+
 func (o Opcode) dump() {
 	console.Infof("> OPC >>> kind: %X, x: %X, y: %X, n:%X, nn:%X, nnn:%X\n", o.kind, o.x, o.y, o.n, o.nn, o.nnn)
 }
@@ -41,15 +45,19 @@ func (v *VM) DumpMemory(start int, end int) {
 }
 
 func (v *VM) debugLog(s string) {
-	if !v.debug {
+	if !v.DebugEnabled() {
 		return
 	}
 	console.Debug(s)
 }
 
 func (v *VM) debugLogf(f string, a ...interface{}) {
-	if !v.debug {
+	if !v.DebugEnabled() {
 		return
 	}
 	console.Debugf(f, a...)
+}
+
+func (v *VM) DebugEnabled() bool {
+	return v.DebugLevel == DebugLevelFull
 }
