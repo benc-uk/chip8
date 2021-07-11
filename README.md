@@ -113,6 +113,7 @@ This is the default mode, in this mode you can specify the foreground colour (fo
 This is a special mode, unique (AFAIK) to this emulator and it attempts to add multi-colour support to the CHIP-8 system without the need for any software or system changes (i.e. it can work with ALL existing ROMs, games and programs), and supports with both CHIP-8 and Super CHIP-8 software
 
 <img src="./docs/screens/car-colour.png" width="360"> <img src="./docs/screens/joust-colour.png" width="360">
+<img src="./docs/screens/worm3-colour.png" width="360"> <img src="./docs/screens/spacefig-colour.png" width="360">
 
 This mode is only enabled if a colour mapping file is found.  
 Colour mapping files are YAML files named as follows `{rom-name}.colours.yaml` and should be in the same directory as the ROM file, e.g. of you were loading the following program ROM `roms/stuff/foo.ch8`, the mapping file looked for would be `roms/stuff/foo.ch8.colours.yaml`
@@ -139,7 +140,7 @@ ranges:
     end: '0BBC'
 ```
 
-In order to aid creation of these files a special debug mode `-debug=1` is included which will output the addresses of sprites the first time they are drawn.
+In order to aid creation of these files a special debug mode `-debug=1` is included, which will output the addresses of sprites the first time they are drawn.
 
 TODO: Full explanation / reference for *.colours.yaml* files
 
